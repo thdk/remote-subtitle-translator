@@ -1,1 +1,1 @@
-# typescript-start
+# remote-subtitle-translator

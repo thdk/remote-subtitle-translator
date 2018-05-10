@@ -1,7 +1,7 @@
 {
-  "name": "typescript-start",
+  "name": "remote-subtitle-translator",
   "version": "1.0.0",
-  "description": "A start boiler template for typescript projects",
+  "description": "Watch a video in full screen on your tv and get realtime subs on your phone. Translate those you don't understand and save your favorites for future study.",
   "main": "src/js/app.ts",
   "scripts": {
     "test": "we are live!",
@@ -12,14 +12,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/thdk/typescript-start.git"
+    "url": "git+https://github.com/thdk/remote-subtitle-translator.git"
   },
   "author": "thdk",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/thdk/typescript-start/issues"
+    "url": "https://github.com/thdk/remote-subtitle-translator/issues"
   },
-  "homepage": "https://github.com/thdk/typescript-start#readme",
+  "homepage": "https://github.com/thdk/remote-subtitle-translator#readme",
   "devDependencies": {
     "concurrently": "^3.5.1",
     "gulp-sass": "^4.0.1",
