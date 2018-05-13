@@ -7,7 +7,11 @@ namespace thdk.rst {
     export class RemoteSubtitleReceiver {
         private db: any;
         private $container: JQuery;
-        private dbSubtitleRef: any;
+        private $toolbar: JQuery;
+        private dbSubtitlesRef: any;
+        private dbUserRef: any;
+
+        private user?: IUser;
 
         private translateService: translate.ITranslateService;
 
@@ -25,22 +29,48 @@ namespace thdk.rst {
             const settings = {/* your settings... */ timestampsInSnapshots: true };
             this.db.settings(settings);
 
-            this.dbSubtitleRef = this.db.collection("subtitles");
+            this.dbSubtitlesRef = this.db.collection("subtitles");
+            this.dbUserRef = this.db.collection("users").doc("thomas"); // todo use the logged in user id
+
 
             this.$container = $("#subsContainer");
+            this.$toolbar = $("#toolbar");
+
+            this.preInitAsync().then(() => this.init());
         }
 
-        public init() {
+        private preInitAsync() {
+            return this.dbUserRef.get().then(doc => {
+                if (doc.exists) {
+                    this.user = { isWatching: doc.data().isWatching };
+                    console.log("Document data:", doc.data());
+                } else {
+                    // doc.data() will be undefined in this case
+                    console.log("No such document!");
+                }
+            }).catch(function(error) {
+                console.log("Error getting document:", error);
+            });
+        }
+
+        private init() {
 
             this.$container.on("click", ".sub", (e) => {
                 const $target = $(e.currentTarget);
                 const subId = $target.attr("data-subid");
                 this.translateService.translate($target.find("p.original").html()).then(translation => {
-                    this.dbSubtitleRef.doc(subId).update({translation});
+                    this.dbSubtitlesRef.doc(subId).update({translation});
                 });
             });
 
-            this.dbSubtitleRef
+            this.$toolbar.on("click", ".toggleplayback", (e) => {
+                e.preventDefault();
+                this.dbUserRef.update({isWatching: !this.user!.isWatching}).then(() => {
+                    this.user!.isWatching = !this.user!.isWatching;
+                });
+            });
+
+            this.dbSubtitlesRef
                 .onSnapshot(snapshot => {
                     snapshot.docChanges.forEach(change => {
                         if (change.type === "added") {
@@ -94,5 +124,4 @@ namespace thdk.rst {
 $(function () {
     const network = new thdk.network.HttpNetwork();
     const app = new thdk.rst.RemoteSubtitleReceiver(config, new thdk.translate.google.GoogleTranslate(config, network));
-    app.init();
 });

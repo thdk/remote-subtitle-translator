@@ -4,6 +4,10 @@ namespace thdk.rst {
         subtitle: string;
         translation?: string;
     }
+
+    export interface IUser {
+        isWatching: boolean;
+    }
 }
 
 namespace thdk.translate {
@@ -41,7 +45,7 @@ namespace thdk.translate {
                     model: 'nmt',
                     key: this.apiKey
                 };
-                return this.network.postData<{data: { translations: {model: string, translatedText: string}[]}}>(url, data).then(response => {
+                return this.network.postData<{ data: { translations: { model: string, translatedText: string }[] } }>(url, data).then(response => {
                     console.log(response);
                     return response;
                 }).then(r => r.data.translations[0].translatedText);
@@ -93,11 +97,11 @@ namespace thdk.network {
                 redirect: 'follow', // manual, *follow, error
                 referrer: 'client', // *client, no-referrer
             })
-            .then(response => {
-                if (!response.ok)
-                    throw new Error(response.statusText)
+                .then(response => {
+                    if (!response.ok)
+                        throw new Error(response.statusText)
 
-                  return response.json()
+                    return response.json()
                 });
         }
     }
