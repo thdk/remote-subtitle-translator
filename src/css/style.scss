@@ -4,24 +4,42 @@ body {
     color: $primary-color;
     background: $background-color;
     font-size: $font-size;
+    padding: 0;
+    margin: 0;
+  }
+
+  a:visited, a:link, a:hover, a:active{
+    text-decoration: none;
+    color: $primary-color;
+  }
+
+  a:hover, a:active {
+    color: $secondary-color;
+    cursor: pointer;
+  }
+
+  li {
+    list-style: none;
   }
 
   .subs-wrapper {
     width: 100%;
-    max-width: 400px;
     margin-left: auto;
     margin-right: auto;
   }
 
   .subs {
-    max-height: 240px;
+    max-height: 100vh;
     overflow: scroll;
-    margin-top: auto;
-    margin-bottom: auto;
+    padding-left: 2em;
 
     .sub {
-      height: 90px;
-      text-align: center;
+      min-height: 90px;
+      text-align: left;
+
+      p.translation {
+        color: $secondary-color;
+      }
     }
   }
 
@@ -38,5 +56,9 @@ html {
     overflow: auto;
     margin-right: 14px;
     padding-right: 28px;
-    padding-bottom: 15px;
+  }
+
+  #toolbar {
+    position: absolute;
+    bottom: 0;
   }
