@@ -24,41 +24,49 @@ body {
 
   .subs-wrapper {
     width: 100%;
-    margin-left: auto;
-    margin-right: auto;
   }
 
   .subs {
-    max-height: 100vh;
-    overflow: scroll;
-    padding-left: 2em;
+    padding-bottom: 6vh;
 
     .sub {
-      min-height: 90px;
       text-align: left;
+      padding: 2%;
+      padding-left: 3%;
 
-      p.translation {
-        color: $secondary-color;
+      &:hover {
+        cursor: pointer;
       }
+
+      p {
+        &.translation {
+          color: $secondary-color;
+        }
+      }
+    }
+
+    .sub:nth-child(odd) {
+      background:#1c1c1c;
     }
   }
 
 html {
   height: 100%;
 }
-.hidescrollbar-wrapper {
-    overflow: hidden;
-}
-
-.hidescrollbar {
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    margin-right: 14px;
-    padding-right: 28px;
-  }
-
   #toolbar {
-    position: absolute;
+    position: fixed;
     bottom: 0;
+    background: #333232;
+    width: 100%;
+    font-size: 3vh;
+    line-height: 3vh;
+
+    ul {
+      -webkit-padding-start: 3%;
+
+      a {
+        padding: 2%;
+        margin-left: -2%;
+      }
+    }
   }

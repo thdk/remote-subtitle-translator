@@ -80,7 +80,7 @@ namespace thdk.rst {
                             this.updateSubtitleInDom(change.doc.data(), change.doc.id);
                         }
                         if (change.type === "removed") {
-                            console.log("Removed: ", change.doc.data());
+                            throw 'not implemented';
                         }
                     });
                 });
@@ -102,9 +102,7 @@ namespace thdk.rst {
             // todo: use an dictionary to keep reference of subtitles in DOM by id
             const $template = this.getSubitleTemplate(sub, id);
             this.$container.append($template);
-
-            // scroll to the bottom
-            this.$container[0].scrollTop = this.$container[0].scrollHeight;
+            this.scrollDown();
         }
 
         private updateSubtitleInDom(sub: ISubtitle, id: string) {
@@ -112,12 +110,14 @@ namespace thdk.rst {
 
             // todo: use an dictionary to keep reference of subtitles in DOM by id
             this.$container.find(`.sub[data-subid=${id}]`).replaceWith($template);
-        }
-
-        private deleteSubtitleFromDom() {
 
         }
 
+        private scrollDown() {
+            $('html, body').animate({
+                scrollTop: this.$toolbar.offset()!.top + 100
+            }, 0);
+        }
     }
 }
 
