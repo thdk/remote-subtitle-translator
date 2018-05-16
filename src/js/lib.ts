@@ -3,6 +3,7 @@ namespace thdk.rst {
         id: string;
         subtitle: string;
         translation?: string;
+        created: any;
     }
 
     export interface IUser {

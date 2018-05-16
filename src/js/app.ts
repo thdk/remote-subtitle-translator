@@ -30,6 +30,7 @@ namespace thdk.rst {
             this.db.settings(settings);
 
             this.dbSubtitlesRef = this.db.collection("subtitles");
+
             this.dbUserRef = this.db.collection("users").doc("thomas"); // todo use the logged in user id
 
 
@@ -48,7 +49,7 @@ namespace thdk.rst {
                     // doc.data() will be undefined in this case
                     console.log("No such document!");
                 }
-            }).catch(function(error) {
+            }).catch(function (error) {
                 console.log("Error getting document:", error);
             });
         }
@@ -59,19 +60,20 @@ namespace thdk.rst {
                 const $target = $(e.currentTarget);
                 const subId = $target.attr("data-subid");
                 this.translateService.translate($target.find("p.original").html()).then(translation => {
-                    this.dbSubtitlesRef.doc(subId).update({translation});
+                    this.dbSubtitlesRef.doc(subId).update({ translation });
                 });
             });
 
-            this.$toolbar.on("click", ".toggleplayback", (e) => {
+            this.$toolbar.on("click touchstart", ".toggleplayback", (e) => {
                 e.preventDefault();
-                this.dbUserRef.update({isWatching: !this.user!.isWatching}).then(() => {
+                this.dbUserRef.update({ isWatching: !this.user!.isWatching }).then(() => {
                     this.user!.isWatching = !this.user!.isWatching;
                 });
             });
 
-            this.dbSubtitlesRef
+            this.dbSubtitlesRef.orderBy("created")
                 .onSnapshot(snapshot => {
+                    console.log(snapshot);
                     snapshot.docChanges.forEach(change => {
                         if (change.type === "added") {
                             this.addSubtitleToDom(change.doc.data(), change.doc.id);
