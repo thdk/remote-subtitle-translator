@@ -46,10 +46,10 @@ namespace thdk.translate {
                     model: 'nmt',
                     key: this.apiKey
                 };
-                return this.network.postData<{ data: { translations: { model: string, translatedText: string }[] } }>(url, data).then(response => {
-                    console.log(response);
-                    return response;
-                }).then(r => r.data.translations[0].translatedText);
+                return this.network.postData<{ data: { translations: { model: string, translatedText: string }[] } }>(url, data)
+                    .then(response => {
+                        return response;
+                    }).then(r => r.data.translations[0].translatedText);
             };
         }
     }
