@@ -6,12 +6,12 @@ declare var firebase: any;
 namespace thdk.rst {
     export class RemoteSubtitleReceiver {
         private db: any;
-        private $container: JQuery;
-        private $toolbar: JQuery;
+        private $container?: JQuery;
+        private $toolbar?: JQuery;
         private dbSubtitlesRef: any;
-        private dbUserRef: any;
+        private dbSessionsRef: any;
 
-        private user?: IUser;
+        private session?: ISession;
 
         private translateService: translate.ITranslateService;
 
@@ -24,37 +24,38 @@ namespace thdk.rst {
 
             this.translateService = translateService;
 
+            this.initCloudFirestoreAsync()
+                .then(() => {
+                    this.$container = $("#subsContainer");
+                    this.$toolbar = $("#toolbar");
+
+                    this.init();
+                });
+        }
+
+        private initCloudFirestoreAsync(): Promise<void> {
             // Initialize Cloud Firestore through Firebase
             this.db = firebase.firestore();
             const settings = {/* your settings... */ timestampsInSnapshots: true };
             this.db.settings(settings);
 
-            this.dbSubtitlesRef = this.db.collection("subtitles");
+            this.dbSessionsRef = this.db.collection("sessions");
 
-            this.dbUserRef = this.db.collection("users").doc("thomas"); // todo use the logged in user id
-
-
-            this.$container = $("#subsContainer");
-            this.$toolbar = $("#toolbar");
-
-            this.preInitAsync().then(() => this.init());
-        }
-
-        private preInitAsync() {
-            return this.dbUserRef.get().then(doc => {
-                if (doc.exists) {
-                    this.user = { isWatching: doc.data().isWatching };
-                    console.log("Document data:", doc.data());
-                } else {
-                    // doc.data() will be undefined in this case
-                    console.log("No such document!");
-                }
-            }).catch(function (error) {
-                console.log("Error getting document:", error);
-            });
+            // TODO: implement firebase auth and replace below uid with the uid of logged in user
+            return this.dbSessionsRef.where("uid", "==", "RSSYXXk2sBNfmAGG0sUtfmKcOox1").orderBy("created", "desc").limit(1)
+                .get()
+                .then(querySnapshot => {
+                    this.session = querySnapshot.docs[0];
+                    this.dbSubtitlesRef = this.dbSessionsRef.doc(this.session!.id).collection("subtitles");
+                })
+                .catch(function (error) {
+                    console.log("Error getting documents: ", error);
+                })
         }
 
         private init() {
+            if (!this.$container || !this.$toolbar)
+                return;
 
             this.$container.on("click", ".sub", (e) => {
                 const $target = $(e.currentTarget);
@@ -66,8 +67,8 @@ namespace thdk.rst {
 
             this.$toolbar.on("click touchstart", ".toggleplayback", (e) => {
                 e.preventDefault();
-                this.dbUserRef.update({ isWatching: !this.user!.isWatching }).then(() => {
-                    this.user!.isWatching = !this.user!.isWatching;
+                this.dbSessionsRef.doc(this.session!.id).update({ isWatching: !this.session!.isWatching }).then(() => {
+                    this.session!.isWatching = !this.session!.isWatching;
                 });
             });
 
@@ -101,6 +102,9 @@ namespace thdk.rst {
         }
 
         private addSubtitleToDom(sub: ISubtitle, id: string) {
+            if (!this.$container)
+                return;
+
             // todo: use an dictionary to keep reference of subtitles in DOM by id
             const $template = this.getSubitleTemplate(sub, id);
             this.$container.append($template);
@@ -108,6 +112,9 @@ namespace thdk.rst {
         }
 
         private updateSubtitleInDom(sub: ISubtitle, id: string) {
+            if (!this.$container)
+                return;
+
             const $template = this.getSubitleTemplate(sub, id);
 
             // todo: use an dictionary to keep reference of subtitles in DOM by id
@@ -116,6 +123,9 @@ namespace thdk.rst {
         }
 
         private scrollDown() {
+            if (!this.$toolbar)
+                return;
+
             $('html, body').animate({
                 scrollTop: this.$toolbar.offset()!.top + 100
             }, 0);

@@ -6,8 +6,9 @@ namespace thdk.rst {
         created: any;
     }
 
-    export interface IUser {
+    export interface ISession {
         isWatching: boolean;
+        id: string;
     }
 }
 
