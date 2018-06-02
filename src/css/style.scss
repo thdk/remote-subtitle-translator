@@ -22,6 +22,14 @@ body {
     list-style: none;
   }
 
+  .float-right {
+    float: right;
+  }
+
+  .float-left {
+    float: left;
+  }
+
   .subs-wrapper {
     width: 100%;
   }
@@ -53,6 +61,24 @@ body {
 html {
   height: 100%;
 }
+
+.panel {
+    &.padding {
+      padding: 2em;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    #panelCloseIcon {
+      position: absolute;
+      right: 3em;
+      top: 3em;
+      padding: 1em;
+    }
+}
+
   #toolbar {
     position: fixed;
     bottom: 0;
@@ -65,8 +91,12 @@ html {
       -webkit-padding-start: 3%;
       margin: 0;
 
+      li {
+        width: 20%;
+      }
+
       a {
-        padding: 2%;
+        padding: 1em;
         margin-left: -2%;
         display: block;
       }

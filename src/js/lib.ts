@@ -1,4 +1,8 @@
 namespace thdk.rst {
+    export interface ILoggedInMessage {
+        uid: string;
+    }
+
     export interface ISubtitle {
         id: string;
         subtitle: string;
@@ -11,6 +15,8 @@ namespace thdk.rst {
         id: string;
     }
 }
+
+declare var firebaseui: any;
 
 namespace thdk.translate {
     export interface ITranslateService {
