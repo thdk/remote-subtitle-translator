@@ -30,6 +30,10 @@ body {
     float: left;
   }
 
+  .hide {
+    display: none;
+  }
+
   .subs-wrapper {
     width: 100%;
   }
@@ -41,15 +45,24 @@ body {
       text-align: left;
       padding: 2%;
       padding-left: 3%;
+      float: left;
+      width: 100%;
 
       &:hover {
         cursor: pointer;
       }
 
       p {
+        float: left;
+        width: 90%;
         &.translation {
           color: $secondary-color;
         }
+      }
+
+      .sub-controls {
+        float: left;
+        width: 10%;
       }
     }
 

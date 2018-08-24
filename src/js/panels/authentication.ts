@@ -29,7 +29,6 @@ namespace thdk.rst {
 
                 //launch the firebaseUI flow
                 this.firebaseUI = new firebaseui.auth.AuthUI(this.firebaseApp.auth());
-                // this.firebaseUI.disableAutoSignIn();
 
                 resolve();
 
@@ -50,13 +49,6 @@ namespace thdk.rst {
                             (loaderEl as HTMLElement).style.display = 'none';
                     },
                     signInSuccessWithAuthResult: (authResult, redirectUrl) => {
-                        if (authResult.user) {
-                           console.log("handleSignedInUser( " + authResult.user +")");
-                          }
-                          if (authResult.additionalUserInfo) {
-                            console.log(authResult.additionalUserInfo.isNewUser ?
-                                'New User' : 'Existing User');
-                          }
                         return false;
                     },
                     signInFailure: (errorCode, credential) => {
@@ -81,7 +73,7 @@ namespace thdk.rst {
                 {
                     provider: firebase.auth.EmailAuthProvider.PROVIDER_ID,
                     // Whether the display name should be displayed in Sign Up page.
-                    requireDisplayName: true
+                    requireDisplayName: true // true seems not to work:
                   },
                 ],
                 // Terms of service url.

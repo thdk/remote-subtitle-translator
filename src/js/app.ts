@@ -170,12 +170,12 @@ namespace thdk.rst {
             this.dbSubtitlesRef.orderBy("created")
                 .onSnapshot(snapshot => {
                     console.log(snapshot);
-                    snapshot.docChanges.forEach(change => {
+                    snapshot.docChanges().forEach(change => {
                         if (change.type === "added") {
                             this.addSubtitleToDom(change.doc.data(), change.doc.id);
                         }
                         if (change.type === "modified") {
-                            this.updateSubtitleInDom(change.doc.data(), change.doc.id);
+                            this.titleInDom(change.doc.data(), change.doc.id);
                         }
                         if (change.type === "removed") {
                             throw 'not implemented';
@@ -190,8 +190,16 @@ namespace thdk.rst {
                 <p class="original">${sub.subtitle}</p>
             </div>`);
 
-            if (sub.translation)
+            if (sub.translation) {
+                // TODO: reduce into single append!
                 $template.append(`<p class="translation">${sub.translation}</p>`);
+                $template.append(`
+                <div class="sub-controls">
+                    <span class="fav">☆</span>
+                    <span class="unfav hide">★</span>
+                </div>`);
+                $template.append(`<div class="clear"></div>`);
+            }
 
             return $template;
         }
@@ -206,7 +214,7 @@ namespace thdk.rst {
             this.scrollDown();
         }
 
-        private updateSubtitleInDom(sub: ISubtitle, id: string) {
+        private titleInDom(sub: ISubtitle, id: string) {
             if (!this.$container)
                 return;
 
