@@ -1,4 +1,5 @@
-namespace thdk.rst {
+import {IBroadcaster, BroadCaster} from '../broadcaster';
+
     export interface IPanel {
         readonly containerEl: HTMLElement;
 
@@ -75,4 +76,3 @@ namespace thdk.rst {
         action: "show" | "close",
         panelName: string
     }
-}

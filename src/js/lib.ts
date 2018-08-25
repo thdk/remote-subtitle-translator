@@ -1,4 +1,4 @@
-namespace thdk.rst {
+// namespace thdk.rst {
     export interface ILoggedInMessage {
         uid: string;
     }
@@ -15,16 +15,16 @@ namespace thdk.rst {
         isWatching?: boolean;
         id: string;
     }
-}
+//}
 
 declare var firebaseui: any;
 
-namespace thdk.translate {
+// namespace thdk.translate {
     export interface ITranslateService {
         translate(text: string): Promise<string>;
     }
 
-    export namespace google {
+    // export namespace google {
         export interface IGoogleConfig {
             apiKey: string;
         }
@@ -33,9 +33,9 @@ namespace thdk.translate {
 
         export class GoogleTranslate implements ITranslateService {
             private apiKey: string;
-            private network: thdk.network.INetwork;
+            private network: INetwork;
 
-            constructor(config: IGoogleTranslateConfig, network: thdk.network.INetwork) {
+            constructor(config: IGoogleTranslateConfig, network: INetwork) {
                 this.apiKey = config.apiKey;
                 this.network = network;
             }
@@ -60,10 +60,10 @@ namespace thdk.translate {
                     }).then(r => r.data.translations[0].translatedText);
             };
         }
-    }
-}
+    // }
+// }
 
-namespace thdk.network {
+
     export interface INetwork {
         postData<T>(url: string, data: any): Promise<T>;
     }
@@ -114,4 +114,3 @@ namespace thdk.network {
                 });
         }
     }
-}

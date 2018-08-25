@@ -1,6 +1,9 @@
 /// <reference path="panels.ts"/>
 
-namespace thdk.rst {
+import { Panel } from "./panels";
+declare var firebase;
+declare var firebaseui;
+
     interface IAuthenticatorDependencies {
         firebaseApp: any;
     }
@@ -85,4 +88,3 @@ namespace thdk.rst {
             this.firebaseUI.start('#firebaseui-auth-container', uiConfig);
         }
     }
-}

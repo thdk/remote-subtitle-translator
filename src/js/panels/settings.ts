@@ -1,6 +1,8 @@
 /// <reference path="panels.ts" />
 
-namespace thdk.rst {
+import { Panel } from "./panels";
+
+
     export class SettingsPanel extends Panel {
         private firebaseApp: any;
         private loggedInEls: NodeListOf<Element>;
@@ -50,4 +52,3 @@ namespace thdk.rst {
             super.open();
         }
     }
-}

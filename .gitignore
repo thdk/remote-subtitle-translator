@@ -62,5 +62,7 @@ typings/
 
 dist/
 
+tmp/
+
 # app config file
 src/config.ts

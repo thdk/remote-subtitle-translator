@@ -7,8 +7,10 @@
     "test": "we are live!",
     "tsc": "tsc",
     "tsc:w": "tsc -w",
+    "rollup": "rollup tmp/js/app.js --format iife --name rstBundle --file dist/js/app.js",
     "lite": "lite-server --baseDir ./dist",
-    "start": "concurrently \"gulp\" \"gulp watch\" \"npm run lite\" "
+    "start-old": "concurrently \"gulp\" \"gulp watch\" \"npm run lite\" ",
+    "start": "concurrently \"tsc\" \"npm run rollup\" \"gulp scss\" \"npm run lite\" "
   },
   "repository": {
     "type": "git",
@@ -24,10 +26,12 @@
     "concurrently": "^3.6.1",
     "gulp-sass": "^4.0.1",
     "lite-server": "^2.4.0",
+    "rollup": "^0.65.0",
     "typescript": "^2.9.2"
   },
   "dependencies": {
     "@types/jquery": "^3.3.6",
+    "firebase": "^5.4.1",
     "gulp": "^3.9.1",
     "gulp-typescript": "^4.0.2"
   }

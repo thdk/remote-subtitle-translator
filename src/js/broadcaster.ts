@@ -1,4 +1,4 @@
-namespace thdk {
+
     export interface IMessage {
         type: string;
         payload: any;
@@ -34,4 +34,3 @@ namespace thdk {
             this.bc.postMessage({ type, payload: data });
         }
     }
-}
