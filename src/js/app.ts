@@ -70,7 +70,7 @@ namespace thdk.rst {
                     break;
                 case 'panel':
                     if ((data as IPanelMessage).action === "show") {
-                        if(this.$toolbar)
+                        if (this.$toolbar)
                             this.$toolbar.hide();
                     }
                     else if ((data as IPanelMessage).action === "close") {
@@ -152,8 +152,14 @@ namespace thdk.rst {
                 });
             });
 
-            this.$container.on("click", ".fav", e => {
+            this.$container.on("click", ".fav, .unfav", e => {
+                const $target = $(e.currentTarget);
+                const subId = $target.closest(".sub").attr("data-subid");
+                if (!subId) {
+                    throw new Error("Can't add subtitle to favorites. No element .sub found with attibute: data-subid");
+                }
 
+                this.toggleSubtitleInFavoritesAsync(subId);
             });
 
             this.$toolbar.on("click touch", ".toggleplayback", e => {
@@ -188,7 +194,7 @@ namespace thdk.rst {
                 .onSnapshot(snapshot => {
                     console.log(snapshot);
                     snapshot.docChanges().forEach(change => {
-                        const subtitle = Object.assign(change.doc.data(), {id: change.doc.id}) as ISubtitle;
+                        const subtitle = Object.assign(change.doc.data(), { id: change.doc.id }) as ISubtitle;
                         if (change.type === "added") {
                             this.addSubtitleToDom(subtitle);
                         }
@@ -202,6 +208,41 @@ namespace thdk.rst {
                 });
         }
 
+        private toggleSubtitleInFavoritesAsync(subId: string) {
+            if (!this.dbFavoriteSubtitlesRef) {
+                throw new Error("Can't add favorite subtitle: dbFavoriteSubtitlesRef is undefined.")
+            }
+
+            if (!this.dbSubtitlesRef) {
+                throw new Error("Can't add favorite subtitle: dbSubtitlesRef is undefined.")
+            }
+
+            const sourceSubtitleRef = this.dbSubtitlesRef.doc(subId);
+            sourceSubtitleRef.get().then(subDoc => {
+                const { id: sourceSubtitleId, subtitle, translation, favoriteId } = Object.assign(subDoc.data(), { id: subDoc.id }) as ISubtitle;
+                const fav = {
+                    sourceSubtitleId,
+                    subtitle,
+                    translation
+                };
+
+                const favoriteSubRef = favoriteId ? this.dbFavoriteSubtitlesRef!.doc(favoriteId) : this.dbFavoriteSubtitlesRef!.doc();
+                if (favoriteId) {// Remove from favorites
+                    return Promise.all([
+                        favoriteSubRef.delete(),
+                        sourceSubtitleRef.update({ favoriteId: null })
+                    ]);
+                }
+                else {
+                    // Add to favorites
+                    return Promise.all([
+                        favoriteSubRef.set(fav),
+                        sourceSubtitleRef.update({ favoriteId: favoriteSubRef.id })
+                    ]);
+                }
+            });
+        }
+
         private getSubitleTemplate(sub: ISubtitle): JQuery {
             const $template = $(`
             <div class="sub" data-subid="${sub.id}">
@@ -213,8 +254,8 @@ namespace thdk.rst {
                 $template.append(`<p class="translation">${sub.translation}</p>`);
                 $template.append(`
                 <div class="sub-controls">
-                    <span class="fav">☆</span>
-                    <span class="unfav hide">★</span>
+                    <span class="fav${!sub.favoriteId ? "" : " hide"}">☆</span>
+                    <span class="unfav${sub.favoriteId ? "" : " hide"}">★</span>
                 </div>`);
                 $template.append(`<div class="clear"></div>`);
             }

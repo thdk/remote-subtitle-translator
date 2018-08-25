@@ -7,6 +7,7 @@ namespace thdk.rst {
         id: string;
         subtitle: string;
         translation?: string;
+        favoriteId?: string;
         created: any;
     }
 
