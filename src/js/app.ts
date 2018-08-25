@@ -5,17 +5,20 @@
 /// <reference path="panels/authentication.ts" />
 /// <reference path="panels/settings.ts" />
 
+/// <reference path="../types/firestore.d.ts"/>
+
 declare var firebase: any;
 
 namespace thdk.rst {
     export class RemoteSubtitleReceiver {
-        private db: any;
+        private firestore?: FirebaseFirestore.Firestore;
         private $container?: JQuery;
         private $toolbar?: JQuery;
         private subtitlePlayerEl: HTMLElement | null;
         private settingsEl: HTMLElement | null;
-        private dbSubtitlesRef: any;
-        private dbSessionsRef: any;
+        private dbSubtitlesRef?: FirebaseFirestore.CollectionReference;
+        private dbSessionsRef?: FirebaseFirestore.CollectionReference;
+        private dbFavoriteSubtitlesRef?: FirebaseFirestore.CollectionReference;
 
         private session?: ISession;
 
@@ -112,18 +115,19 @@ namespace thdk.rst {
 
         private initCloudFirestoreAsync(uid): Promise<void> {
             // Initialize Cloud Firestore through Firebase
-            this.db = firebase.firestore();
+            this.firestore = firebase.firestore() as FirebaseFirestore.Firestore;
             const settings = { timestampsInSnapshots: true };
-            this.db.settings(settings);
+            this.firestore.settings(settings);
 
-            this.dbSessionsRef = this.db.collection("sessions");
+            this.dbSessionsRef = this.firestore.collection("sessions");
+            this.dbFavoriteSubtitlesRef = this.firestore.collection("favorites");
 
             // TODO: implement firebase auth and replace below uid with the uid of logged in user
             return this.dbSessionsRef.where("uid", "==", uid).orderBy("created", "desc").limit(1)
                 .get()
                 .then(querySnapshot => {
                     this.session = querySnapshot.docs[0];
-                    this.dbSubtitlesRef = this.dbSessionsRef.doc(this.session!.id).collection("subtitles");
+                    this.dbSubtitlesRef = this.dbSessionsRef!.doc(this.session!.id).collection("subtitles");
                 })
                 .catch(function (error) {
                     console.log("Error getting documents: ", error);
@@ -136,26 +140,34 @@ namespace thdk.rst {
 
             this.subtitlePlayerEl.style.display = 'block';
 
-            this.$container.on("click", ".sub", (e) => {
+            this.$container.on("click", ".sub", e => {
                 const $target = $(e.currentTarget);
                 const subId = $target.attr("data-subid");
                 this.translateService.translate($target.find("p.original").html()).then(translation => {
-                    this.dbSubtitlesRef.doc(subId).update({ translation });
+                    if (this.dbSubtitlesRef) {
+                        this.dbSubtitlesRef.doc(subId).update({ translation });
+                    } else {
+                        throw new Error("Can't update subtitle: dbSubtitlesRef is undefined.");
+                    }
                 });
             });
 
-            this.$toolbar.on("click touch", ".toggleplayback", (e) => {
+            this.$container.on("click", ".fav", e => {
+
+            });
+
+            this.$toolbar.on("click touch", ".toggleplayback", e => {
                 e.preventDefault();
+
+                if (!this.dbSessionsRef) return;
+
                 this.dbSessionsRef.doc(this.session!.id).update({ isWatching: !this.session!.isWatching }).then(() => {
                     this.session!.isWatching = !this.session!.isWatching;
                 });
             });
 
-            this.$toolbar.on("click touch", ".settings", (e) => {
+            this.$toolbar.on("click touch", ".settings", e => {
                 e.preventDefault();
-
-                if (!this.settingsEl)
-                    throw "settings element is missing in DOM";
 
                 const panels = document.querySelectorAll('.panel');
                 for (let index = 0; index < panels.length; index++) {
@@ -163,19 +175,25 @@ namespace thdk.rst {
                     (panel as HTMLElement).style.display = 'none';
                 }
 
+                // TODO: Settingspanel should be initialized only once
+                // Move to constructor?
+                if (!this.settingsEl)
+                    throw "settings element is missing in DOM";
+
                 const settingsPanel = new SettingsPanel(this.settingsEl, this.firebaseApp);
                 settingsPanel.createAsync().then(() => settingsPanel.open());
             });
 
-            this.dbSubtitlesRef.orderBy("created")
+            this.dbSubtitlesRef!.orderBy("created")
                 .onSnapshot(snapshot => {
                     console.log(snapshot);
                     snapshot.docChanges().forEach(change => {
+                        const subtitle = Object.assign(change.doc.data(), {id: change.doc.id}) as ISubtitle;
                         if (change.type === "added") {
-                            this.addSubtitleToDom(change.doc.data(), change.doc.id);
+                            this.addSubtitleToDom(subtitle);
                         }
                         if (change.type === "modified") {
-                            this.titleInDom(change.doc.data(), change.doc.id);
+                            this.updateSubtitleInDom(subtitle);
                         }
                         if (change.type === "removed") {
                             throw 'not implemented';
@@ -184,9 +202,9 @@ namespace thdk.rst {
                 });
         }
 
-        private getSubitleTemplate(sub: ISubtitle, id: string): JQuery {
+        private getSubitleTemplate(sub: ISubtitle): JQuery {
             const $template = $(`
-            <div class="sub" data-subid="${id}">
+            <div class="sub" data-subid="${sub.id}">
                 <p class="original">${sub.subtitle}</p>
             </div>`);
 
@@ -204,24 +222,24 @@ namespace thdk.rst {
             return $template;
         }
 
-        private addSubtitleToDom(sub: ISubtitle, id: string) {
+        private addSubtitleToDom(sub: ISubtitle) {
             if (!this.$container)
                 return;
 
             // todo: use an dictionary to keep reference of subtitles in DOM by id
-            const $template = this.getSubitleTemplate(sub, id);
+            const $template = this.getSubitleTemplate(sub);
             this.$container.append($template);
             this.scrollDown();
         }
 
-        private titleInDom(sub: ISubtitle, id: string) {
+        private updateSubtitleInDom(sub: ISubtitle) {
             if (!this.$container)
                 return;
 
-            const $template = this.getSubitleTemplate(sub, id);
+            const $template = this.getSubitleTemplate(sub);
 
             // todo: use an dictionary to keep reference of subtitles in DOM by id
-            this.$container.find(`.sub[data-subid=${id}]`).replaceWith($template);
+            this.$container.find(`.sub[data-subid=${sub.id}]`).replaceWith($template);
 
         }
 
@@ -239,7 +257,4 @@ namespace thdk.rst {
 $(function () {
     const network = new thdk.network.HttpNetwork();
     const app = new thdk.rst.RemoteSubtitleReceiver(config, new thdk.translate.google.GoogleTranslate(config, network));
-
-
-
 });

@@ -11,7 +11,7 @@ namespace thdk.rst {
     }
 
     export interface ISession {
-        isWatching: boolean;
+        isWatching?: boolean;
         id: string;
     }
 }
