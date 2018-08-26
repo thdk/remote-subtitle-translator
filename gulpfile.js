@@ -52,6 +52,6 @@ gulp.task('tsc:watch', function () {
 });
 
 // Gulp default task
-gulp.task('default', ['html', 'tsc', 'scss']);
+gulp.task('default', ['html', 'scss']);
 
 gulp.task('watch', ['tsc:watch', 'scss:watch']);
