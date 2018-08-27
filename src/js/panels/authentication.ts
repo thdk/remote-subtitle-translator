@@ -4,41 +4,30 @@ import { Panel } from "./panels";
 declare var firebase;
 declare var firebaseui;
 
-    interface IAuthenticatorDependencies {
-        firebaseApp: any;
+interface IAuthenticatorDependencies {
+    firebaseApp: any;
+}
+
+export class AuthenticationPanel extends Panel {
+    private firebaseApp: any;
+    private unsubscribeOAuthStateChanged?: () => void;
+    private firebaseUI: any;
+
+    constructor(deps: IAuthenticatorDependencies, containerEl: HTMLElement) {
+        super("authentication", containerEl);
+        this.firebaseApp = deps.firebaseApp;
+        this.firebaseUI = new firebaseui.auth.AuthUI(this.firebaseApp.auth());
     }
-    export class AuthenticationPanel extends Panel {
-        private firebaseApp: any;
-        private unsubscribeOAuthStateChanged?: () => void;
-        private firebaseUI: any;
 
-        constructor(deps: IAuthenticatorDependencies, containerEl: HTMLElement) {
-            super("authentication", containerEl);
-            this.firebaseApp = deps.firebaseApp;
-        }
+    public openAsync() {
+        return this.launchFirebaseAuthUIAsync().then(() => {           
+            // Firebase auth ui is shown
+            return super.openAsync();
+        });        
+    }
 
-        public createAsync() {
-            return this.createFirebaseAuthUIAsync();
-        }
-
-        public open() {
-            this.launchFirebaseAuthUI();
-            this.init();
-            super.open();
-        }
-
-        private createFirebaseAuthUIAsync() {
-            return new Promise<void>((resolve, reject) => {
-
-                //launch the firebaseUI flow
-                this.firebaseUI = new firebaseui.auth.AuthUI(this.firebaseApp.auth());
-
-                resolve();
-
-            });
-        }
-
-        private launchFirebaseAuthUI() {
+    private launchFirebaseAuthUIAsync() {
+        return new Promise((resolve) => {
             //ui config for firebaseUI
             const uiConfig = {
                 // Url to redirect to after a successful sign-in.
@@ -46,10 +35,7 @@ declare var firebaseui;
                 'callbacks': {
                     uiShown: () => {
                         // The widget is rendered.
-                        // Hide the loader.
-                        const loaderEl = this.containerEl.querySelector('#firebase-loader');
-                        if (loaderEl)
-                            (loaderEl as HTMLElement).style.display = 'none';
+                        resolve();
                     },
                     signInSuccessWithAuthResult: (authResult, redirectUrl) => {
                         return false;
@@ -77,7 +63,7 @@ declare var firebaseui;
                     provider: firebase.auth.EmailAuthProvider.PROVIDER_ID,
                     // Whether the display name should be displayed in Sign Up page.
                     requireDisplayName: true // true seems not to work:
-                  },
+                },
                 ],
                 // Terms of service url.
                 'tosUrl': 'https://www.google.com',
@@ -86,5 +72,6 @@ declare var firebaseui;
             };
             console.log("start firebase UI");
             this.firebaseUI.start('#firebaseui-auth-container', uiConfig);
-        }
+        });
     }
+}

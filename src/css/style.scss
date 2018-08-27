@@ -1,4 +1,6 @@
 @import '_vars';
+@import '_topnavigation.scss';
+
 body {
     font: 100% $font-stack;
     color: $primary-color;

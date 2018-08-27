@@ -12,7 +12,8 @@
     "rollup": "rollup -c",
     "lite": "lite-server --baseDir ./dist",
     "start-old": "concurrently \"gulp\" \"gulp watch\" \"npm run lite\" ",
-    "build": "npm run html && npm run tsc && npm run scss && npm run rollup",
+    "build": "npm run tsc && npm run rollup",
+    "buildall": "npm run build && npm run html && npm run scss",
     "start": "npm run build && npm run lite"
   },
   "repository": {

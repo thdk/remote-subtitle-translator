@@ -5,6 +5,9 @@ import { AuthenticationPanel } from './panels/authentication';
 import { ISession, ITranslateService, ILoggedInMessage, ISubtitle, HttpNetwork, GoogleTranslate } from './lib';
 import { IPanelMessage } from './panels/panels';
 import { SettingsPanel } from './panels/settings';
+import { Settings } from 'http2';
+import { TopNavigationView, ITopNavigationView } from './navigation/TopNavigationView';
+import { TopNavigationController } from './navigation/TopNavigationController';
 
 declare const firebase: any;
 
@@ -12,6 +15,7 @@ export class RemoteSubtitleReceiver {
     private firestore?: any;
     private $container?: JQuery;
     private $toolbar?: JQuery;
+
     private subtitlePlayerEl: HTMLElement | null;
     private settingsEl: HTMLElement | null;
     private dbSubtitlesRef?: any;
@@ -22,6 +26,10 @@ export class RemoteSubtitleReceiver {
 
     private translateService: ITranslateService;
     private authenticator?: AuthenticationPanel;
+    private readonly settingsPanel: SettingsPanel;
+
+private readonly topNavigation: ITopNavigationView;
+
     private firebaseApp: any;
 
     private broadcaster: IBroadcaster;
@@ -39,10 +47,14 @@ export class RemoteSubtitleReceiver {
         this.translateService = translateService;
 
         this.subtitlePlayerEl = document.getElementById('subtitle-player');
+
         this.settingsEl = document.getElementById('settings');
+        if (!this.settingsEl) throw new Error("Settings element is missing in DOM");
+        this.settingsPanel = new SettingsPanel(this.settingsEl, this.firebaseApp);
+
+        this.topNavigation = new TopNavigationView((view) => new TopNavigationController(this.settingsPanel, view));
 
         // authentication
-
         this.firebaseApp.auth().onAuthStateChanged(user => {
             // unsubscribeOAuthStateChanged();
             if (user) {
@@ -103,9 +115,9 @@ export class RemoteSubtitleReceiver {
             }
 
             this.authenticator = new AuthenticationPanel({ firebaseApp: this.firebaseApp }, authenticationEl);
-            this.authenticator.createAsync().then(() => this.authenticator!.open());
+            this.authenticator.openAsync();
         } else {
-            this.authenticator.open();
+            this.authenticator.openAsync();
         }
     }
 
@@ -166,25 +178,7 @@ export class RemoteSubtitleReceiver {
             this.dbSessionsRef.doc(this.session!.id).update({ isWatching: !this.session!.isWatching }).then(() => {
                 this.session!.isWatching = !this.session!.isWatching;
             });
-        });
-
-        this.$toolbar.on("click touch", ".settings", e => {
-            e.preventDefault();
-
-            const panels = document.querySelectorAll('.panel');
-            for (let index = 0; index < panels.length; index++) {
-                const panel = panels[index];
-                (panel as HTMLElement).style.display = 'none';
-            }
-
-            // TODO: Settingspanel should be initialized only once
-            // Move to constructor?
-            if (!this.settingsEl)
-                throw "settings element is missing in DOM";
-
-            const settingsPanel = new SettingsPanel(this.settingsEl, this.firebaseApp);
-            settingsPanel.createAsync().then(() => settingsPanel.open());
-        });
+        });        
 
         this.dbSubtitlesRef!.orderBy("created")
             .onSnapshot(snapshot => {
