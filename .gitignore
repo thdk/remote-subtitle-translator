@@ -66,3 +66,5 @@ tmp/
 
 # app config file
 src/config.ts
+
+config.js
