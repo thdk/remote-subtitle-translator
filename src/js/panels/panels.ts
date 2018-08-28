@@ -1,8 +1,8 @@
-import { IBroadcaster, BroadCaster } from '../broadcaster';
+import { IBroadcaster, BroadCaster, IMessage } from '../broadcaster';
 
 export interface IPanel {
     readonly containerEl: HTMLElement;
-
+    readonly name: string;
     openAsync(): Promise<void>;
 }
 
@@ -17,7 +17,7 @@ export class Panel implements IPanel {
     constructor(name: string, container: HTMLElement) {
         this.containerEl = container;
         this.bc = new BroadCaster("app");
-        this.bc.onMessage = (type, payload) => this.onMessage(type, payload);
+        this.bc.onMessage = (msg) => this.onMessage(msg);
         this.name = name;
 
         this.closeEl = this.containerEl.querySelector("#panelCloseIcon") as HTMLElement;
@@ -35,15 +35,14 @@ export class Panel implements IPanel {
             this.isOpen = true;
             this.bc.postMessage("panel", { action: "show", panelName: this.name });
             this.containerEl.style.display = 'block';
-            this.init();
             resolve();
         });
     }
 
-    private onMessage(type: string, payload: any) {
-        switch (type) {
+    private onMessage(message: IMessage) {
+        switch (message.type) {
             case "panel":
-                const msg = payload as IPanelMessage;
+                const msg = message as IPanelMessage;
                 if (msg.action === "show" && msg.panelName !== this.name) {
                     this.containerEl.style.display = 'none';
                 }
@@ -56,7 +55,7 @@ export class Panel implements IPanel {
         this.isOpen = false;
         this.containerEl.style.display = 'none';
         this.deinit();
-        this.bc.postMessage("panel", { action: "close", panelName: this.name })
+        this.bc.postMessage("panel", { action: "close", panelName: this.name });
     }
 
     protected init() {
@@ -75,7 +74,7 @@ export class Panel implements IPanel {
     }
 }
 
-export interface IPanelMessage {
+export interface IPanelMessage extends IMessage {
     action: "show" | "close",
     panelName: string
 }

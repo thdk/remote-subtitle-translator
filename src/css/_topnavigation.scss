@@ -2,4 +2,10 @@
     position: fixed;
     width: 100%;
     background: dimgrey;
+    height: 50px;
+
+    .nav-item {
+        float: left;
+        margin: 0.4em;
+    }
 }

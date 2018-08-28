@@ -12,11 +12,11 @@ body {
 
   a:visited, a:link, a:hover, a:active{
     text-decoration: none;
-    color: $primary-color;
+    color: $secondary-color;
   }
 
   a:hover, a:active {
-    color: $secondary-color;
+    color: $primary-color;
     cursor: pointer;
   }
 
@@ -42,6 +42,7 @@ body {
 
   .subs {
     padding-bottom: 6vh;
+    padding-top: 50px;
 
     .sub {
       text-align: left;

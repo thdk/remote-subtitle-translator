@@ -1,24 +1,36 @@
-import { SettingsPanel } from "../panels/settings";
-import { IPanel } from "../panels/panels";
 import { ITopNavigationView } from "./TopNavigationView";
+import { PanelDashboard } from "../panels/dashboard";
+import { IBroadcaster, BroadCaster, IMessage, IListener } from "../broadcaster";
 
 export interface ITopNavigationController {
-    settingsItemClicked: () => void;
+    itemClicked: (itemName: string) => void;
 }
 
-export class TopNavigationController implements ITopNavigationController {
-    private readonly settingsPanel: IPanel;
+export class TopNavigationController implements ITopNavigationController, IListener {
+    private readonly panelDashboard: PanelDashboard;
     private readonly view: ITopNavigationView;
+    private readonly broadcaster: IBroadcaster;
 
     // todo: use a panelDashboard to control multiple panels
-    constructor(settingsPanel: SettingsPanel, view: ITopNavigationView){
-        this.settingsPanel = settingsPanel;
+    constructor(panelDashboard: PanelDashboard, view: ITopNavigationView){
+        this.panelDashboard = panelDashboard;
         this.view = view;
+
+        this.broadcaster = new BroadCaster("app");
+        this.broadcaster.onMessage = (msg) => this.onMessage(msg);
     }
 
-    public settingsItemClicked() {
-        this.settingsPanel.openAsync().then(() => { return; }, error => {
-            console.log("Can't open settings panel: " + error);
-        });
+    public itemClicked(itemName: string) {
+        this.panelDashboard.showPanel(itemName);
+    }
+
+    public onMessage(message: IMessage) {
+        if (message.type === "loggedIn") {
+            this.view.show();
+        }
+
+        if (message.type === "loggedOut") {
+            this.view.hide();
+        }
     }
 }
