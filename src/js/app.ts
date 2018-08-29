@@ -91,7 +91,7 @@ export class RemoteSubtitleReceiver {
                 this.favoriteSubtitlesPanel = new FavoriteSubtitlesPanel(this.favoriteSubtitlesEl, this.dbFavoriteSubtitlesRef, dbSubtitlesRef);
                 this.panelDashboard.setPanel(this.favoriteSubtitlesPanel);
 
-                this.subtitlesPanel.openAsync();
+               this.panelDashboard.showPanel(this.subtitlesPanel.name);
             })
             .catch(function (error) {
                 console.log("Error getting documents: ", error);
@@ -109,7 +109,7 @@ export class RemoteSubtitleReceiver {
             this.panelDashboard.setPanel(this.authenticator);
         }
 
-        this.authenticator.openAsync();
+        this.panelDashboard.showPanel(this.authenticator.name);
     }
 
     private initCloudFirestore() {
