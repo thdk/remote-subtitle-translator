@@ -15,6 +15,13 @@
         isWatching?: boolean;
         id: string;
     }
+
+    export interface IFavoriteSubtitle {
+            sourceSubtitleId: string;
+            subtitle: string;
+            translation: string;
+            created: any;
+    }
 //}
 
 declare var firebaseui: any;

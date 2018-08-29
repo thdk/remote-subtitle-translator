@@ -8,6 +8,7 @@ import { TopNavigationView, ITopNavigationView } from './navigation/TopNavigatio
 import { TopNavigationController } from './navigation/TopNavigationController';
 import { SubtitlesPanel } from './panels/subtitles';
 import { PanelDashboard } from './panels/dashboard';
+import { FavoriteSubtitlesPanel } from './panels/favoriteSubtitles';
 
 declare const firebase: any;
 
@@ -19,8 +20,10 @@ export class RemoteSubtitleReceiver {
     private readonly panelDashboard: PanelDashboard;
     private authenticator?: AuthenticationPanel;
     private readonly settingsPanel: SettingsPanel;
-    private subtitlePlayerEl: HTMLElement;
+    private readonly subtitlePlayerEl: HTMLElement;
     private subtitlesPanel?: SubtitlesPanel;
+    private readonly favoriteSubtitlesEl: HTMLElement;
+    private favoriteSubtitlesPanel?: FavoriteSubtitlesPanel;
 
     private readonly translateService: ITranslateService;
 
@@ -48,15 +51,19 @@ export class RemoteSubtitleReceiver {
         if (!subtitlePlayerEl) throw new Error("Subtitle player element is missing in DOM");
         this.subtitlePlayerEl = subtitlePlayerEl;
 
+        const favoriteSubtitlesEl = document.getElementById("favorite-subtitles");
+        if (!favoriteSubtitlesEl) throw new Error("Favorite subtitles element is missing in DOM");
+        this.favoriteSubtitlesEl = favoriteSubtitlesEl;
+
         const settingsEl = document.getElementById('settings');
         if (!settingsEl) throw new Error("Settings element is missing in DOM");
         this.settingsPanel = new SettingsPanel(settingsEl, this.firebaseApp);
-        
+
         this.panelDashboard.setPanel(this.settingsPanel);
 
         // authentication
         this.firebaseApp.auth().onAuthStateChanged(user => {
-            
+
             // todo: move broadcasting of loggedIn / loggedOut to authenticator?
             if (user) {
                 this.handleLoggedIn(user.uid);
@@ -72,10 +79,23 @@ export class RemoteSubtitleReceiver {
         this.initCloudFirestore();
         if (this.authenticator) this.authenticator.close();
 
-        this.subtitlesPanel = new SubtitlesPanel(this.subtitlePlayerEl, uid, this.dbFavoriteSubtitlesRef, this.dbSessionsRef, this.translateService);
+        return this.dbSessionsRef.where("uid", "==", uid).orderBy("created", "desc").limit(1)
+            .get()
+            .then(querySnapshot => {
+                const session = querySnapshot.docs[0];
+                const dbSubtitlesRef = this.dbSessionsRef.doc(session!.id).collection("subtitles");
 
-        this.panelDashboard.setPanel(this.subtitlesPanel);
-        this.subtitlesPanel.openAsync();
+                this.subtitlesPanel = new SubtitlesPanel(this.subtitlePlayerEl, uid, dbSubtitlesRef, this.dbFavoriteSubtitlesRef, this.dbSessionsRef, session, this.translateService);
+                this.panelDashboard.setPanel(this.subtitlesPanel);
+
+                this.favoriteSubtitlesPanel = new FavoriteSubtitlesPanel(this.favoriteSubtitlesEl, this.dbFavoriteSubtitlesRef, dbSubtitlesRef);
+                this.panelDashboard.setPanel(this.favoriteSubtitlesPanel);
+
+                this.subtitlesPanel.openAsync();
+            })
+            .catch(function (error) {
+                console.log("Error getting documents: ", error);
+            });
     }
 
     private promptAuthentication() {
@@ -99,7 +119,7 @@ export class RemoteSubtitleReceiver {
         this.firestore.settings(settings);
 
         this.dbSessionsRef = this.firestore.collection("sessions");
-        this.dbFavoriteSubtitlesRef = this.firestore.collection("favorites");        
+        this.dbFavoriteSubtitlesRef = this.firestore.collection("favorites");
     }
 }
 

@@ -3,6 +3,7 @@
 import { Panel } from "./panels";
 import { ITranslateService, ISubtitle, ISession } from "../lib";
 
+declare const firebase: any;
 
 export class SubtitlesPanel extends Panel {
     // todo: get rid of JQuery (use the containerEl on Panel instead)
@@ -10,8 +11,8 @@ export class SubtitlesPanel extends Panel {
     private readonly $toolbar: JQuery;
 
     private readonly translateService: ITranslateService;
-    private dbSubtitlesRef: any;
-    private session?: ISession;
+    private readonly dbSubtitlesRef: any;
+    private readonly session?: ISession;
 
     private readonly dbFavoritesRef: any;
     private readonly dbSessionsRef: any;
@@ -21,13 +22,13 @@ export class SubtitlesPanel extends Panel {
 
     private unsubscribe?: () => void;
 
-    constructor(container: HTMLElement, uid: string, dbFavoritesRef: any, dbSessionsRef: any, translateService: ITranslateService) {
+    constructor(container: HTMLElement, uid: string, dbSubtitlesRef:any,  dbFavoritesRef: any, dbSessionsRef: any, session: ISession, translateService: ITranslateService) {
         super('subtitles', container);
 
         this.uid = uid;
 
         const subsPlaceholderEl = this.containerEl.querySelector(".subs");
-        if (!subsPlaceholderEl) throw new Error ("Subtitle panel must have a placeholder element for subs");
+        if (!subsPlaceholderEl) throw new Error("Subtitle panel must have a placeholder element for subs");
 
         // todo: get rid of JQuery
         this.$container = $(subsPlaceholderEl as HTMLElement);
@@ -36,15 +37,17 @@ export class SubtitlesPanel extends Panel {
         this.translateService = translateService;
         this.dbFavoritesRef = dbFavoritesRef;
         this.dbSessionsRef = dbSessionsRef;
+        this.dbSubtitlesRef = dbSubtitlesRef;
+        this.session = session;
     }
 
     protected init() {
         super.init();
-        
+
         if (!this.containerEl || !this.$toolbar)
             return;
 
-        this.$container.on("click", ".sub", e => {
+        this.$container.on("click.rst", ".sub", e => {
             const $target = $(e.currentTarget);
             const subId = $target.attr("data-subid");
             this.translateService.translate($target.find("p.original").html()).then(translation => {
@@ -56,7 +59,7 @@ export class SubtitlesPanel extends Panel {
             });
         });
 
-        this.$container.on("click", ".fav, .unfav", e => {
+        this.$container.on("click.rst", ".fav, .unfav", e => {
             const $target = $(e.currentTarget);
             const subId = $target.closest(".sub").attr("data-subid");
             if (!subId) {
@@ -66,7 +69,7 @@ export class SubtitlesPanel extends Panel {
             this.toggleSubtitleInFavoritesAsync(subId);
         });
 
-        this.$toolbar.on("click touch", ".toggleplayback", e => {
+        this.$toolbar.on("click.rst touch.rst", ".toggleplayback", e => {
             e.preventDefault();
 
             if (!this.dbSessionsRef) return;
@@ -77,25 +80,27 @@ export class SubtitlesPanel extends Panel {
         });
 
         this.unsubscribe = this.dbSubtitlesRef.orderBy("created")
-        .onSnapshot(snapshot => {
-            console.log(snapshot);
-            snapshot.docChanges().forEach(change => {
-                const subtitle = Object.assign(change.doc.data(), { id: change.doc.id }) as ISubtitle;
-                if (change.type === "added") {
-                    this.addSubtitleToDom(subtitle);
-                }
-                if (change.type === "modified") {
-                    this.updateSubtitleInDom(subtitle);
-                }
-                if (change.type === "removed") {
-                    throw 'not implemented';
-                }
+            .onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    const subtitle = Object.assign(change.doc.data(), { id: change.doc.id }) as ISubtitle;
+                    if (change.type === "added") {
+                        this.addSubtitleToDom(subtitle);
+                    }
+                    if (change.type === "modified") {
+                        this.updateSubtitleInDom(subtitle);
+                    }
+                    if (change.type === "removed") {
+                        throw 'not implemented';
+                    }
+                });
             });
-        });
     }
 
     protected deinit() {
         if (this.unsubscribe) this.unsubscribe();
+
+        this.$container.off(".rst");
+        this.$toolbar.off(".rst");
         super.deinit();
     }
 
@@ -103,18 +108,13 @@ export class SubtitlesPanel extends Panel {
         // TODO: implement firebase auth and replace below uid with the uid of logged in user
         if (!this.uid) throw new Error("firebase uid is not set!");
 
-        return super.openAsync().then(() => {
-            return this.dbSessionsRef.where("uid", "==", this.uid).orderBy("created", "desc").limit(1)
-            .get()
-            .then(querySnapshot => {
-                this.session = querySnapshot.docs[0];
-                this.dbSubtitlesRef = this.dbSessionsRef.doc(this.session!.id).collection("subtitles");
-                this.init();           
-            })
-            .catch(function (error) {
-                console.log("Error getting documents: ", error);
-            });
-        });       
+        return super.openAsync();
+    }
+
+    public close() {
+        super.close();
+        // remove all subtitles from DOM
+        this.$container.empty();
     }
 
     private getSubitleTemplate(sub: ISubtitle): JQuery {
@@ -169,14 +169,10 @@ export class SubtitlesPanel extends Panel {
         const sourceSubtitleRef = this.dbSubtitlesRef.doc(subId);
         sourceSubtitleRef.get().then(subDoc => {
             const { id: sourceSubtitleId, subtitle, translation, favoriteId } = Object.assign(subDoc.data(), { id: subDoc.id }) as ISubtitle;
-            const fav = {
-                sourceSubtitleId,
-                subtitle,
-                translation
-            };
 
-            const favoriteSubRef = favoriteId ? this.dbFavoritesRef!.doc(favoriteId) : this.dbFavoritesRef!.doc();
-            if (favoriteId) {// Remove from favorites
+            if (favoriteId) {
+                // Remove from favorites
+                const favoriteSubRef = this.dbFavoritesRef!.doc(favoriteId);
                 return Promise.all([
                     favoriteSubRef.delete(),
                     sourceSubtitleRef.update({ favoriteId: null })
@@ -184,13 +180,21 @@ export class SubtitlesPanel extends Panel {
             }
             else {
                 // Add to favorites
+                const fav = {
+                    sourceSubtitleId,
+                    subtitle,
+                    translation,
+                    created: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                const favoriteSubRef = this.dbFavoritesRef!.doc();
+
                 return Promise.all([
                     favoriteSubRef.set(fav),
                     sourceSubtitleRef.update({ favoriteId: favoriteSubRef.id })
                 ]);
             }
         });
-    } 
+    }
 
     private scrollDown() {
         if (!this.$toolbar)

@@ -4,6 +4,7 @@ export interface IPanel {
     readonly containerEl: HTMLElement;
     readonly name: string;
     openAsync(): Promise<void>;
+    close();
 }
 
 export class Panel implements IPanel {
@@ -35,6 +36,7 @@ export class Panel implements IPanel {
             this.isOpen = true;
             this.bc.postMessage("panel", { action: "show", panelName: this.name });
             this.containerEl.style.display = 'block';
+            this.init();
             resolve();
         });
     }
