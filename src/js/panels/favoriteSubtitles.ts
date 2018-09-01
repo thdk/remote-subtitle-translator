@@ -2,6 +2,7 @@
 
 import { Panel } from "./panels";
 import { ITranslateService, ISubtitle, ISession, IFavoriteSubtitle } from "../lib";
+import * as authentication from "../lib/authenticator";
 
 declare const firebase: any;
 
@@ -32,8 +33,8 @@ export class FavoriteSubtitlesPanel extends Panel {
         if (!this.containerEl)
             return;
 
-        // TODO: only get the favorites of logged in user
-        this.unsubscribe = this.dbFavoritesRef.orderBy("created")
+        authentication.getLoggedInUserAsync().then(user => {
+            this.unsubscribe = this.dbFavoritesRef.where("uid", "==", user.uid).orderBy("created")
             .onSnapshot(snapshot => {
                 console.log(snapshot);
                 snapshot.docChanges().forEach(change => {
@@ -49,6 +50,8 @@ export class FavoriteSubtitlesPanel extends Panel {
                     }
                 });
             });
+        });
+        
 
         this.containerEl.addEventListener("click", e => this.deleteIconClickHandler(e));
     }

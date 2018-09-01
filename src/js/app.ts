@@ -61,6 +61,7 @@ export class RemoteSubtitleReceiver {
 
         this.panelDashboard.setPanel(this.settingsPanel);
 
+        alert("ok");
         // authentication
         this.firebaseApp.auth().onAuthStateChanged(user => {
 
@@ -83,15 +84,19 @@ export class RemoteSubtitleReceiver {
             .get()
             .then(querySnapshot => {
                 const session = querySnapshot.docs[0];
-                const dbSubtitlesRef = this.dbSessionsRef.doc(session!.id).collection("subtitles");
-
-                this.subtitlesPanel = new SubtitlesPanel(this.subtitlePlayerEl, uid, dbSubtitlesRef, this.dbFavoriteSubtitlesRef, this.dbSessionsRef, session, this.translateService);
-                this.panelDashboard.setPanel(this.subtitlesPanel);
-
-                this.favoriteSubtitlesPanel = new FavoriteSubtitlesPanel(this.favoriteSubtitlesEl, this.dbFavoriteSubtitlesRef, dbSubtitlesRef);
-                this.panelDashboard.setPanel(this.favoriteSubtitlesPanel);
-
-               this.panelDashboard.showPanel(this.subtitlesPanel.name);
+                if (session) {
+                    const dbSubtitlesRef = this.dbSessionsRef.doc(session!.id).collection("subtitles");
+    
+                    this.subtitlesPanel = new SubtitlesPanel(this.subtitlePlayerEl, uid, dbSubtitlesRef, this.dbFavoriteSubtitlesRef, this.dbSessionsRef, session, this.translateService);
+                    this.panelDashboard.setPanel(this.subtitlesPanel);
+    
+                    this.favoriteSubtitlesPanel = new FavoriteSubtitlesPanel(this.favoriteSubtitlesEl, this.dbFavoriteSubtitlesRef, dbSubtitlesRef);
+                    this.panelDashboard.setPanel(this.favoriteSubtitlesPanel);
+    
+                   this.panelDashboard.showPanel(this.subtitlesPanel.name);
+                } else {
+                    throw new Error("No sessions found");
+                }
             })
             .catch(function (error) {
                 console.log("Error getting documents: ", error);

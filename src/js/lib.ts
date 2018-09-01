@@ -21,6 +21,7 @@
             subtitle: string;
             translation: string;
             created: any;
+            uid: string;
     }
 //}
 

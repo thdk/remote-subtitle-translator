@@ -32,7 +32,7 @@ export class SettingsPanel extends Panel {
                     .item(0)
                     .getElementsByTagName('span')
                     .item(0)
-                    .textContent = user.displayName;
+                    .textContent = user.displayName + "(" + user.email +")";
 
                 // display all elements for logged in users
                 for (let index = 0; index < this.loggedInEls.length; index++) {

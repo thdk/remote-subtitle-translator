@@ -68,3 +68,7 @@ tmp/
 src/config.ts
 
 config.js
+
+.firebase/
+
+.firebaserc

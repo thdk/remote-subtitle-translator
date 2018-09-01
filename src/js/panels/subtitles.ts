@@ -27,7 +27,7 @@ export class SubtitlesPanel extends Panel {
 
         this.uid = uid;
 
-        const subsPlaceholderEl = this.containerEl.querySelector(".subs");
+        const subsPlaceholderEl = this.containerEl.querySelector("#subsContainer");
         if (!subsPlaceholderEl) throw new Error("Subtitle panel must have a placeholder element for subs");
 
         // todo: get rid of JQuery
@@ -184,7 +184,8 @@ export class SubtitlesPanel extends Panel {
                     sourceSubtitleId,
                     subtitle,
                     translation,
-                    created: firebase.firestore.FieldValue.serverTimestamp()
+                    created: firebase.firestore.FieldValue.serverTimestamp(),
+                    uid: this.uid
                 };
                 const favoriteSubRef = this.dbFavoritesRef!.doc();
 

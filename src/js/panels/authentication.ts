@@ -27,6 +27,7 @@ export class AuthenticationPanel extends Panel {
     }
 
     private launchFirebaseAuthUIAsync() {
+        alert("launchFirebaseAuthUIAsync");
         return new Promise((resolve) => {
             //ui config for firebaseUI
             const uiConfig = {
