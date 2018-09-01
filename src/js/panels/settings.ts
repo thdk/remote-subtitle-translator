@@ -2,9 +2,8 @@
 
 import { Panel } from "./panels";
 
-
 export class SettingsPanel extends Panel {
-    private firebaseApp: any;
+    private firebaseApp: firebase.app.App;
     private loggedInEls: NodeListOf<Element>;
 
     constructor(container: HTMLElement, firebaseApp: any) {

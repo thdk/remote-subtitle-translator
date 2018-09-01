@@ -10,12 +10,16 @@ import { SubtitlesPanel } from './panels/subtitles';
 import { PanelDashboard } from './panels/dashboard';
 import { FavoriteSubtitlesPanel } from './panels/favoriteSubtitles';
 
-declare const firebase: any;
+// This import loads the firebase namespace along with all its type information.
+import * as firebase from "firebase";
+// These imports load individual services into the firebase namespace.
+import 'firebase/auth';
+import 'firebase/database';
 
 export class RemoteSubtitleReceiver {
-    private firestore?: any;
-    private dbSessionsRef?: any;
-    private dbFavoriteSubtitlesRef?: any;
+    private firestore?: firebase.firestore.Firestore;
+    private dbSessionsRef?: firebase.firestore.CollectionReference;
+    private dbFavoriteSubtitlesRef?: firebase.firestore.CollectionReference;
 
     private readonly panelDashboard: PanelDashboard;
     private authenticator?: AuthenticationPanel;
@@ -29,7 +33,7 @@ export class RemoteSubtitleReceiver {
 
     private readonly topNavigation: ITopNavigationView;
 
-    private firebaseApp: any;
+    private firebaseApp: firebase.app.App;
 
     private broadcaster: IBroadcaster;
 
@@ -80,14 +84,18 @@ export class RemoteSubtitleReceiver {
         this.initCloudFirestore();
         if (this.authenticator) this.authenticator.close();
 
+        if (!this.dbSessionsRef) throw new Error("dbSessionRef is undefined");
+
         return this.dbSessionsRef.where("uid", "==", uid).orderBy("created", "desc").limit(1)
             .get()
             .then(querySnapshot => {
                 const session = querySnapshot.docs[0];
                 if (session) {
-                    const dbSubtitlesRef = this.dbSessionsRef.doc(session!.id).collection("subtitles");
+                    const dbSubtitlesRef = this.dbSessionsRef!.doc(session!.id).collection("subtitles");
     
-                    this.subtitlesPanel = new SubtitlesPanel(this.subtitlePlayerEl, uid, dbSubtitlesRef, this.dbFavoriteSubtitlesRef, this.dbSessionsRef, session, this.translateService);
+                    if (!this.dbFavoriteSubtitlesRef) throw new Error("this.dbFavoriteSubtitlesRef is undefined");
+
+                    this.subtitlesPanel = new SubtitlesPanel(this.subtitlePlayerEl, uid, dbSubtitlesRef, this.dbFavoriteSubtitlesRef, this.dbSessionsRef!, session, this.translateService);
                     this.panelDashboard.setPanel(this.subtitlesPanel);
     
                     this.favoriteSubtitlesPanel = new FavoriteSubtitlesPanel(this.favoriteSubtitlesEl, this.dbFavoriteSubtitlesRef, dbSubtitlesRef);

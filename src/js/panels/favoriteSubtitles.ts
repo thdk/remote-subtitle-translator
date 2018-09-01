@@ -4,18 +4,19 @@ import { Panel } from "./panels";
 import { ITranslateService, ISubtitle, ISession, IFavoriteSubtitle } from "../lib";
 import * as authentication from "../lib/authenticator";
 
-declare const firebase: any;
+import * as firebase from "firebase";
+import "firebase/firestore";
 
 export class FavoriteSubtitlesPanel extends Panel {
-    private readonly dbFavoritesRef: any;
-    private readonly dbSubtitlesRef: any;
+    private readonly dbFavoritesRef: firebase.firestore.CollectionReference;
+    private readonly dbSubtitlesRef: firebase.firestore.CollectionReference;
 
     private unsubscribe?: () => void;
 
     // TODO: get rid of JQuery
     private readonly $container: JQuery;
 
-    constructor(container: HTMLElement, dbFavoritesRef: any, dbSubtitlesRef: any) {
+    constructor(container: HTMLElement, dbFavoritesRef: firebase.firestore.CollectionReference, dbSubtitlesRef: firebase.firestore.CollectionReference) {
         super('favorite-subtitles', container);
 
         this.$container = $(container.querySelector("#favorite-subs-container") as HTMLElement);

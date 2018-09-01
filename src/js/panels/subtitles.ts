@@ -3,7 +3,9 @@
 import { Panel } from "./panels";
 import { ITranslateService, ISubtitle, ISession } from "../lib";
 
-declare const firebase: any;
+import * as firebase from "firebase";
+import "firebase/firestore";
+import "firebase/auth";
 
 export class SubtitlesPanel extends Panel {
     // todo: get rid of JQuery (use the containerEl on Panel instead)
@@ -11,18 +13,18 @@ export class SubtitlesPanel extends Panel {
     private readonly $toolbar: JQuery;
 
     private readonly translateService: ITranslateService;
-    private readonly dbSubtitlesRef: any;
+    private readonly dbSubtitlesRef: firebase.firestore.CollectionReference;
     private readonly session?: ISession;
 
-    private readonly dbFavoritesRef: any;
-    private readonly dbSessionsRef: any;
+    private readonly dbFavoritesRef: firebase.firestore.CollectionReference;
+    private readonly dbSessionsRef: firebase.firestore.CollectionReference;
 
     // todo: use a better authentication manager
     private readonly uid: string;
 
     private unsubscribe?: () => void;
 
-    constructor(container: HTMLElement, uid: string, dbSubtitlesRef:any,  dbFavoritesRef: any, dbSessionsRef: any, session: ISession, translateService: ITranslateService) {
+    constructor(container: HTMLElement, uid: string, dbSubtitlesRef:firebase.firestore.CollectionReference,  dbFavoritesRef: firebase.firestore.CollectionReference, dbSessionsRef: firebase.firestore.CollectionReference, session: ISession, translateService: ITranslateService) {
         super('subtitles', container);
 
         this.uid = uid;
