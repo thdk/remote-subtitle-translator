@@ -2,14 +2,15 @@ import resolve from 'rollup-plugin-node-resolve';
 import commonJS from 'rollup-plugin-commonjs'
 
 export default {
-  external: ['firebase'],  
+  external: ['firebase', 'pubsub-js'],  
     input: 'tmp/js/app.js',
     output: {
       file: 'dist/js/app.js',
       format: 'iife',
-      name: 'rollupBundle',
+      name: 'rollupBundlehh',
       globals: {
         'firebase': 'firebase',
+        'pubsub-js': 'PubSub'
       },
     },
     plugins: [

@@ -37,8 +37,10 @@
   },
   "dependencies": {
     "@types/jquery": "^3.3.6",
+    "@types/pubsub-js": "^1.5.18",
     "firebase": "^5.4.1",
     "gulp": "^3.9.1",
-    "gulp-typescript": "^4.0.2"
+    "gulp-typescript": "^4.0.2",
+    "pubsub-js": "^1.6.1"
   }
 }

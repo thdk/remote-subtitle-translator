@@ -1,6 +1,6 @@
 import { ITopNavigationView } from "./TopNavigationView";
 import { PanelDashboard } from "../panels/dashboard";
-import { IBroadcaster, BroadCaster, IMessage, IListener } from "../broadcaster";
+import { IBroadcaster, IMessage, IListener, PubSubBroadcaster } from "../broadcaster";
 
 export interface ITopNavigationController {
     itemClicked: (itemName: string) => void;
@@ -16,8 +16,8 @@ export class TopNavigationController implements ITopNavigationController, IListe
         this.panelDashboard = panelDashboard;
         this.view = view;
 
-        this.broadcaster = new BroadCaster("app");
-        this.broadcaster.onMessage = (msg) => this.onMessage(msg);
+        this.broadcaster = new PubSubBroadcaster();
+        this.broadcaster.subscribe(this);
     }
 
     public itemClicked(itemName: string) {

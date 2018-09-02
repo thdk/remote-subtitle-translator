@@ -1,6 +1,6 @@
 import { config, IAppConfig } from '../config';
 
-import { IBroadcaster, BroadCaster } from './broadcaster';
+import { IBroadcaster, PubSubBroadcaster } from './broadcaster';
 import { AuthenticationPanel } from './panels/authentication';
 import {  ITranslateService, HttpNetwork, GoogleTranslate } from './lib';
 import { SettingsPanel } from './panels/settings';
@@ -9,6 +9,8 @@ import { TopNavigationController } from './navigation/TopNavigationController';
 import { SubtitlesPanel } from './panels/subtitles';
 import { PanelDashboard } from './panels/dashboard';
 import { FavoriteSubtitlesPanel } from './panels/favoriteSubtitles';
+
+import * as pubsub from 'pubsub-js'
 
 // This import loads the firebase namespace along with all its type information.
 import * as firebase from "firebase";
@@ -49,7 +51,7 @@ export class RemoteSubtitleReceiver {
         this.panelDashboard = new PanelDashboard();
         this.topNavigation = new TopNavigationView((view) => new TopNavigationController(this.panelDashboard, view));
 
-        this.broadcaster = new BroadCaster("app");
+        this.broadcaster = new PubSubBroadcaster();
 
         const subtitlePlayerEl = document.getElementById('subtitle-player');
         if (!subtitlePlayerEl) throw new Error("Subtitle player element is missing in DOM");
@@ -65,7 +67,6 @@ export class RemoteSubtitleReceiver {
 
         this.panelDashboard.setPanel(this.settingsPanel);
 
-        alert("ok");
         // authentication
         this.firebaseApp.auth().onAuthStateChanged(user => {
 

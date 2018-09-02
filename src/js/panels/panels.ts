@@ -1,4 +1,4 @@
-import { IBroadcaster, BroadCaster, IMessage } from '../broadcaster';
+import { IBroadcaster, IMessage, PubSubBroadcaster } from '../broadcaster';
 
 export interface IPanel {
     readonly containerEl: HTMLElement;
@@ -17,8 +17,8 @@ export class Panel implements IPanel {
 
     constructor(name: string, container: HTMLElement) {
         this.containerEl = container;
-        this.bc = new BroadCaster("app");
-        this.bc.onMessage = (msg) => this.onMessage(msg);
+        this.bc = new PubSubBroadcaster();
+        this.bc.subscribe(this);
         this.name = name;
 
         this.closeEl = this.containerEl.querySelector("#panelCloseIcon") as HTMLElement;
@@ -41,7 +41,7 @@ export class Panel implements IPanel {
         });
     }
 
-    private onMessage(message: IMessage) {
+    public onMessage(message: IMessage) {
         switch (message.type) {
             case "panel":
                 const msg = message as IPanelMessage;
