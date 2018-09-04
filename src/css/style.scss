@@ -44,16 +44,27 @@ body {
     width: 100%;
   }
 
+  .subs .hide-originals {
+    .sub.no-translation {
+      display: none;
+    }
+    .sub.has-translation p.original {
+      display: none;
+    }
+  }
+
   .subs {
     padding-bottom: 6vh;
     padding-top: 50px;
 
     .sub {
+      @include disableTouchOverlay;
+      position: relative;
       text-align: left;
       padding: 2%;
       padding-left: 3%;
       float: left;
-      width: 100%;
+      width: 95%;
 
       &:hover {
         cursor: pointer;
@@ -61,15 +72,18 @@ body {
 
       p {
         float: left;
-        width: 90%;
+        width: 86%;
         &.translation {
           color: $secondary-color;
         }
       }
 
       .sub-controls {
-        float: left;
-        width: 10%;
+        position: absolute;
+        right: 10px; 
+        top: 10px;
+        width: 12%;
+        font-size: 2em;
       }
     }
 
@@ -77,10 +91,6 @@ body {
       background:#1c1c1c;
     }
   }
-
-html {
-  height: 100%;
-}
 
 .panel {
     &.padding {
@@ -119,6 +129,10 @@ html {
         padding: 1em;
         margin-left: -2%;
         display: block;
+
+        &.active {
+          color:green;
+        }
       }
     }
   }

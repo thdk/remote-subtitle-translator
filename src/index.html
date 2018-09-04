@@ -5,8 +5,8 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<title>Remote subtitle translator</title>
 	<meta name="description" content="">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link href="css/style.css?1" rel="stylesheet" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, user-scalable=no">
+	<link href="css/style.css?3" rel="stylesheet" />
 	<script src="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.js"></script>
 	<link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.css" />
 </head>
@@ -18,32 +18,40 @@
 	<script src="https://www.gstatic.com/firebasejs/5.0.4/firebase-database.js"></script>
 	<script src="https://www.gstatic.com/firebasejs/5.0.4/firebase-firestore.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/pubsub-js/1.6.1/pubsub.min.js"></script>
-	<script type="text/javascript" src="js/app.js"></script>
+	<script src="./js/app.js"></script>
 
 	<div id="top-navigation">
 		<div class="nav-item" data-item-name="subtitles">
-			<a href="#" class="subtitles">☲</a>
+			<span class="subtitles">☲</span>
 		</div>
 		<div class="nav-item" data-item-name="favorite-subtitles">
-			<a href="#" class="favorites">★</a>
+			<span class="favorites">★</span>
 		</div>
 		<div class="nav-item" data-item-name="settings">
-			<a href="#" class="settings">☀</a>
+			<span class="settings">☀</span>
 		</div>
 	</div>
 
 	<div id="subtitle-player" class="panel" style="display: none;">
 		<div class="hidescrollbar-wrapper subs-wrapper">
 			<div class="subs hidescrollbar">
-				<div  id="subsContainer"></div>
+				<div id="subsContainer"></div>
 				<div class="clear"></div>
 			</div>
 		</div>
 		<div id="toolbar">
 			<ul>
 				<li class="float-left">
+					<a href="#" class="toggleRealtime">♺</a>
+				</li>
+				<li class="float-left">
+					<a href="#" class="hideOriginals">▣ </a>
+				</li>
+				<li class="float-right">
 					<a href="#" class="toggleplayback">&#10074;&#10074;&#9658;</a>
 				</li>
+
+
 			</ul>
 		</div>
 	</div>

@@ -2,7 +2,7 @@ import { config, IAppConfig } from '../config';
 
 import { IBroadcaster, PubSubBroadcaster } from './broadcaster';
 import { AuthenticationPanel } from './panels/authentication';
-import {  ITranslateService, HttpNetwork, GoogleTranslate } from './lib';
+import {  ITranslateService, HttpNetwork, GoogleTranslate, ISession } from './lib';
 import { SettingsPanel } from './panels/settings';
 import { TopNavigationView, ITopNavigationView } from './navigation/TopNavigationView';
 import { TopNavigationController } from './navigation/TopNavigationController';
@@ -90,7 +90,11 @@ export class RemoteSubtitleReceiver {
         return this.dbSessionsRef.where("uid", "==", uid).orderBy("created", "desc").limit(1)
             .get()
             .then(querySnapshot => {
-                const session = querySnapshot.docs[0];
+                let session: ISession | null = null;
+                if (querySnapshot.docs.length) {
+                    const sessionSnapshot = querySnapshot.docs[0];
+                    session = Object.assign({id: sessionSnapshot.id}, sessionSnapshot.data());
+                }
                 if (session) {
                     const dbSubtitlesRef = this.dbSessionsRef!.doc(session!.id).collection("subtitles");
     

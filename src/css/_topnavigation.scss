@@ -1,11 +1,18 @@
+@import '_vars';
 #top-navigation {
     position: fixed;
     width: 100%;
     background: dimgrey;
     height: 50px;
+    z-index: 100;
 
     .nav-item {
         float: left;
         margin: 0.4em;
+
+        &:hover {
+            color: $secondary-color;
+            cursor: pointer;
+        }
     }
 }

@@ -7,10 +7,17 @@ import * as firebase from "firebase";
 import "firebase/firestore";
 import "firebase/auth";
 
+type PlayerSettings = {
+    realtimeTranslation: boolean;
+    hideOriginals: boolean;
+}
+
 export class SubtitlesPanel extends Panel {
     // todo: get rid of JQuery (use the containerEl on Panel instead)
     private readonly $container: JQuery;
     private readonly $toolbar: JQuery;
+    private readonly toolbarRealtimeButtonEl: HTMLElement;
+    private readonly toolbarHideOriginalsButtonEl: HTMLElement;
 
     private readonly translateService: ITranslateService;
     private readonly dbSubtitlesRef: firebase.firestore.CollectionReference;
@@ -24,8 +31,15 @@ export class SubtitlesPanel extends Panel {
 
     private unsubscribe?: () => void;
 
-    constructor(container: HTMLElement, uid: string, dbSubtitlesRef:firebase.firestore.CollectionReference,  dbFavoritesRef: firebase.firestore.CollectionReference, dbSessionsRef: firebase.firestore.CollectionReference, session: ISession, translateService: ITranslateService) {
+    private settings: PlayerSettings;
+
+    constructor(container: HTMLElement, uid: string, dbSubtitlesRef: firebase.firestore.CollectionReference, dbFavoritesRef: firebase.firestore.CollectionReference, dbSessionsRef: firebase.firestore.CollectionReference, session: ISession, translateService: ITranslateService) {
         super('subtitles', container);
+
+        this.settings = {
+            realtimeTranslation: false,
+            hideOriginals: false
+        }
 
         this.uid = uid;
 
@@ -35,6 +49,12 @@ export class SubtitlesPanel extends Panel {
         // todo: get rid of JQuery
         this.$container = $(subsPlaceholderEl as HTMLElement);
         this.$toolbar = $(this.containerEl.querySelector("#toolbar") as HTMLElement);
+        this.toolbarRealtimeButtonEl = this.$toolbar.find(".toggleRealtime")[0];
+        this.toolbarHideOriginalsButtonEl = this.$toolbar.find(".hideOriginals")[0];
+
+        // reflect default settings in view with their side effects
+        this.settingsSetHideOriginals(this.settings.hideOriginals);
+        this.settingsSetRealtimeTranslation(this.settings.realtimeTranslation);
 
         this.translateService = translateService;
         this.dbFavoritesRef = dbFavoritesRef;
@@ -51,17 +71,20 @@ export class SubtitlesPanel extends Panel {
 
         this.$container.on("click.rst", ".sub", e => {
             const $target = $(e.currentTarget);
-            const subId = $target.attr("data-subid");
-            this.translateService.translate($target.find("p.original").html()).then(translation => {
-                if (this.dbSubtitlesRef) {
-                    this.dbSubtitlesRef.doc(subId).update({ translation });
-                } else {
-                    throw new Error("Can't update subtitle: dbSubtitlesRef is undefined.");
+
+            // don't translate twice
+            if (!$target.find("p.translation").length) {
+                const subId = $target.attr("data-subid");
+                const text = $target.find("p.original").html();
+                if (subId) {
+                    this.translate(subId, text);
                 }
-            });
+            }
         });
 
-        this.$container.on("click.rst", ".fav, .unfav", e => {
+        this.$container.on("click.rst, tap.rst", ".fav, .unfav", e => {
+            e.preventDefault();
+            e.stopPropagation();
             const $target = $(e.currentTarget);
             const subId = $target.closest(".sub").attr("data-subid");
             if (!subId) {
@@ -81,15 +104,31 @@ export class SubtitlesPanel extends Panel {
             });
         });
 
+        this.$toolbar.on("click.rst touch.rst", ".toggleRealtime", e => {
+            e.preventDefault();
+            this.controllerRealtimeTranslationClicked();
+        });
+
+        this.$toolbar.on("click.rst touch.rst", ".hideOriginals", e => {
+            e.preventDefault();
+            this.controllerHideOriginalsClicked();
+        });
+
         this.unsubscribe = this.dbSubtitlesRef.orderBy("created")
             .onSnapshot(snapshot => {
                 snapshot.docChanges().forEach(change => {
                     const subtitle = Object.assign(change.doc.data(), { id: change.doc.id }) as ISubtitle;
                     if (change.type === "added") {
                         this.addSubtitleToDom(subtitle);
+                        if (!subtitle.translation && this.settings.realtimeTranslation) {
+                            this.translate(subtitle.id, subtitle.subtitle);
+                        }
                     }
                     if (change.type === "modified") {
                         this.updateSubtitleInDom(subtitle);
+                        if (!subtitle.translation && this.settings.realtimeTranslation) {
+                            this.translate(subtitle.id, subtitle.subtitle);
+                        }
                     }
                     if (change.type === "removed") {
                         throw 'not implemented';
@@ -119,9 +158,59 @@ export class SubtitlesPanel extends Panel {
         this.$container.empty();
     }
 
+    private translate(subId: string, text: string) {
+        this.translateService.translate(text).then(translation => {
+            if (this.dbSubtitlesRef) {
+                this.dbSubtitlesRef.doc(subId).update({ translation });
+            } else {
+                throw new Error("Can't update subtitle: dbSubtitlesRef is undefined.");
+            }
+        });
+    }
+
+    private controllerRealtimeTranslationClicked() {
+        this.settingsSetRealtimeTranslation(!this.settings.realtimeTranslation);
+    }
+
+    private settingsSetRealtimeTranslation(realtime: boolean) {
+        this.settings.realtimeTranslation = realtime;
+        this.viewToolbarSetActiveRealTimeButton(realtime);
+        this.viewToolbarToggleHideOriginalsButton(realtime);
+
+        if (!this.settings.realtimeTranslation){
+            this.settingsSetHideOriginals(false);
+        }
+    }
+
+    private settingsSetHideOriginals(hideOriginals: boolean) {
+        this.settings.hideOriginals = hideOriginals;  
+        this.viewSetActiveHideOriginals(hideOriginals);     
+    }
+
+    private viewToolbarSetActiveRealTimeButton(isRealtime: boolean) {
+        this.toolbarRealtimeButtonEl.classList.toggle("active", isRealtime);
+    }
+
+    private viewToolbarSetActiveHideOriginalsButton(hideOriginals: boolean) {
+        this.toolbarHideOriginalsButtonEl.classList.toggle("active", hideOriginals);
+    }
+
+    private controllerHideOriginalsClicked() {
+        this.settingsSetHideOriginals(!this.settings.hideOriginals);
+    }
+
+    private viewToolbarToggleHideOriginalsButton(view: boolean) {
+        this.toolbarHideOriginalsButtonEl.style.display = view ? "block" : "none";
+    }
+
+    private viewSetActiveHideOriginals(hideOriginals: boolean) {
+        this.viewToolbarSetActiveHideOriginalsButton(hideOriginals);
+        this.$container.toggleClass("hide-originals", hideOriginals);
+    }
+
     private getSubitleTemplate(sub: ISubtitle): JQuery {
         const $template = $(`
-            <div class="sub" data-subid="${sub.id}">
+            <div class="sub ${sub.translation ? "has-translation" : "no-translation"}" data-subid="${sub.id}">
                 <p class="original">${sub.subtitle}</p>
             </div>`);
 
@@ -145,8 +234,7 @@ export class SubtitlesPanel extends Panel {
 
         // todo: use an dictionary to keep reference of subtitles in DOM by id
         const $template = this.getSubitleTemplate(sub);
-        this.$container.append($template);
-        this.scrollDown();
+        this.$container.prepend($template);
     }
 
     private updateSubtitleInDom(sub: ISubtitle) {
