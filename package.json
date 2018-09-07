@@ -10,11 +10,10 @@
     "scss": "gulp scss",
     "html": "gulp html",
     "rollup": "rollup -c",
-    "lite": "lite-server --baseDir ./dist",
-    "start-old": "concurrently \"gulp\" \"gulp watch\" \"npm run lite\" ",
+    "serve": "firebase serve",
     "build": "npm run tsc && npm run rollup",
     "buildall": "npm run build && npm run html && npm run scss",
-    "start": "npm run buildall && npm run lite"
+    "start": "npm run buildall && npm run serve"
   },
   "repository": {
     "type": "git",
@@ -29,7 +28,6 @@
   "devDependencies": {
     "firebase": "^5.4.2",
     "gulp-sass": "^4.0.1",
-    "lite-server": "^2.4.0",
     "rollup": "^0.65.0",
     "rollup-plugin-commonjs": "^9.1.6",
     "rollup-plugin-node-resolve": "^3.3.0",

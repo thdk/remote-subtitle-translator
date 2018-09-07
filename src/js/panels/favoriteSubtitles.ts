@@ -37,7 +37,6 @@ export class FavoriteSubtitlesPanel extends Panel {
         authentication.getLoggedInUserAsync().then(user => {
             this.unsubscribe = this.dbFavoritesRef.where("uid", "==", user.uid).orderBy("created")
             .onSnapshot(snapshot => {
-                console.log(snapshot);
                 snapshot.docChanges().forEach(change => {
                     const subtitle = Object.assign(change.doc.data(), { id: change.doc.id }) as ISubtitle;
                     if (change.type === "added") {

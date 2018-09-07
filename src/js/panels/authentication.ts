@@ -20,14 +20,14 @@ export class AuthenticationPanel extends Panel {
     }
 
     public openAsync() {
-        return this.launchFirebaseAuthUIAsync().then(() => {           
+        return this.launchFirebaseAuthUIAsync().then(() => {
             // Firebase auth ui is shown
             return super.openAsync();
-        });        
+        });
     }
 
     private launchFirebaseAuthUIAsync() {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             //ui config for firebaseUI
             const uiConfig = {
                 // Url to redirect to after a successful sign-in.
@@ -41,9 +41,8 @@ export class AuthenticationPanel extends Panel {
                         return false;
                     },
                     signInFailure: (errorCode, credential) => {
-                        return new Promise((resolve, reject) => {
-                            alert(errorCode);
-                        });
+                        alert(errorCode);
+                        reject(errorCode);
                     }
                 },
                 // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
@@ -70,7 +69,6 @@ export class AuthenticationPanel extends Panel {
                 'credentialHelper': firebaseui.auth.CredentialHelper.NONE
                 //, 'credentialHelper': CLIENT_ID && CLIENT_ID != 'YOUR_OAUTH_CLIENT_ID' ? firebaseui.auth.CredentialHelper.GOOGLE_YOLO : firebaseui.auth.CredentialHelper.ACCOUNT_CHOOSER_COM
             };
-            console.log("start firebase UI");
             this.firebaseUI.start('#firebaseui-auth-container', uiConfig);
         });
     }

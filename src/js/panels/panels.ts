@@ -18,7 +18,6 @@ export class Panel implements IPanel {
     constructor(name: string, container: HTMLElement) {
         this.containerEl = container;
         this.bc = new PubSubBroadcaster();
-        this.bc.subscribe(this);
         this.name = name;
 
         this.closeEl = this.containerEl.querySelector("#panelCloseIcon") as HTMLElement;
@@ -39,17 +38,6 @@ export class Panel implements IPanel {
             this.init();
             resolve();
         });
-    }
-
-    public onMessage(message: IMessage) {
-        switch (message.type) {
-            case "panel":
-                const msg = message as IPanelMessage;
-                if (msg.action === "show" && msg.panelName !== this.name) {
-                    this.containerEl.style.display = 'none';
-                }
-                break;
-        }
     }
 
     public close() {
