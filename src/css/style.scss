@@ -80,7 +80,7 @@ body {
 
       .sub-controls {
         position: absolute;
-        right: 10px; 
+        right: 10px;
         top: 10px;
         width: 12%;
         font-size: 2em;
@@ -89,6 +89,29 @@ body {
 
     .sub:nth-child(odd) {
       background:#1c1c1c;
+    }
+
+    .single-view .sub {
+      display: none;
+
+      &:last-child, &.selected {
+        background:#1c1c1c;
+        display: block;
+        position: fixed;
+        height: 90vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        flex-direction: column;
+        top: 0;
+        font-size: 1.6em;
+        font-weight: bold;
+
+        .sub-controls {
+          top: auto;
+        }
+      }
     }
   }
 
@@ -116,6 +139,7 @@ body {
     width: 100%;
     font-size: 3vh;
     line-height: 3vh;
+    text-align: center;
 
     ul {
       -webkit-padding-start: 3%;

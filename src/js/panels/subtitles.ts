@@ -18,6 +18,7 @@ export class SubtitlesPanel extends Panel {
     private readonly $toolbar: JQuery;
     private readonly toolbarRealtimeButtonEl: HTMLElement;
     private readonly toolbarHideOriginalsButtonEl: HTMLElement;
+    private readonly toolbarToggleSingleViewButtonEl: HTMLElement;
 
     private readonly translateService: ITranslateService;
     private readonly dbSubtitlesRef: firebase.firestore.CollectionReference;
@@ -51,6 +52,7 @@ export class SubtitlesPanel extends Panel {
         this.$toolbar = $(this.containerEl.querySelector("#toolbar") as HTMLElement);
         this.toolbarRealtimeButtonEl = this.$toolbar.find(".toggleRealtime")[0];
         this.toolbarHideOriginalsButtonEl = this.$toolbar.find(".hideOriginals")[0];
+        this.toolbarToggleSingleViewButtonEl = this.$toolbar.find(".toggleSingleView")[0];
 
         // reflect default settings in view with their side effects
         this.settingsSetHideOriginals(this.settings.hideOriginals);
@@ -112,6 +114,11 @@ export class SubtitlesPanel extends Panel {
         this.$toolbar.on("click.rst touch.rst", ".hideOriginals", e => {
             e.preventDefault();
             this.controllerHideOriginalsClicked();
+        });
+
+        this.$toolbar.on("click.rst touch.rst", ".toggleSingleView", e => {
+            e.preventDefault();
+            this.controllerToggleSingleViewClicked(!this.$container.hasClass("single-view"));
         });
 
         this.unsubscribe = this.dbSubtitlesRef.orderBy("created")
@@ -197,6 +204,15 @@ export class SubtitlesPanel extends Panel {
 
     private controllerHideOriginalsClicked() {
         this.settingsSetHideOriginals(!this.settings.hideOriginals);
+    }
+
+    private controllerToggleSingleViewClicked(singleView: boolean) {
+        this.viewSetSingleViewMode(singleView);
+    }
+
+    private viewSetSingleViewMode(singleView) {
+        this.$container.toggleClass("single-view", singleView);
+        if (!singleView) this.scrollDown();
     }
 
     private viewToolbarToggleHideOriginalsButton(view: boolean) {
