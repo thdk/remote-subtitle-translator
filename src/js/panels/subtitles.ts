@@ -183,8 +183,8 @@ export class SubtitlesPanel extends Panel {
     }
 
     private settingsSetHideOriginals(hideOriginals: boolean) {
-        this.settings.hideOriginals = hideOriginals;  
-        this.viewSetActiveHideOriginals(hideOriginals);     
+        this.settings.hideOriginals = hideOriginals;
+        this.viewSetActiveHideOriginals(hideOriginals);
     }
 
     private viewToolbarSetActiveRealTimeButton(isRealtime: boolean) {
@@ -234,7 +234,17 @@ export class SubtitlesPanel extends Panel {
 
         // todo: use an dictionary to keep reference of subtitles in DOM by id
         const $template = this.getSubitleTemplate(sub);
-        this.$container.prepend($template);
+
+        // based on current scroll position, decide before appending new item to DOM
+        const canScrollDown = this.canScrollDown();
+
+        this.$container.append($template);
+
+        if (canScrollDown) this.scrollDown();
+    }
+
+    private canScrollDown(): boolean {
+        return window.innerHeight + window.scrollY >= document.body.offsetHeight;
     }
 
     private updateSubtitleInDom(sub: ISubtitle) {
@@ -243,8 +253,13 @@ export class SubtitlesPanel extends Panel {
 
         const $template = this.getSubitleTemplate(sub);
 
+        // based on current scroll position, decide before appending new item to DOM
+        const canScrollDown = this.canScrollDown();
+
         // todo: use an dictionary to keep reference of subtitles in DOM by id
         this.$container.find(`.sub[data-subid=${sub.id}]`).replaceWith($template);
+
+        if (canScrollDown) this.scrollDown();
     }
 
     private toggleSubtitleInFavoritesAsync(subId: string) {
