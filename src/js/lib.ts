@@ -9,6 +9,7 @@
         translation?: string;
         favoriteId?: string;
         created: any;
+        time?: number;
     }
 
     export interface ISession {
