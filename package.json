@@ -27,6 +27,7 @@
   "homepage": "https://github.com/thdk/remote-subtitle-translator#readme",
   "devDependencies": {
     "firebase-tools": "^4.2.1",
+    "gulp-rev": "^8.1.1",
     "gulp-sass": "^4.0.1",
     "rollup": "^0.65.0",
     "rollup-plugin-commonjs": "^9.1.6",

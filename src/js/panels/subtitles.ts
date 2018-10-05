@@ -1,16 +1,17 @@
-/// <reference path="panels.ts" />
-
 import { Panel } from "./panels";
 import { ITranslateService, ISubtitle, ISession } from "../lib";
 
 import * as firebase from "firebase";
 import "firebase/firestore";
 import "firebase/auth";
+import { getLastValueInMap } from "../lib/utils";
 
 type PlayerSettings = {
     realtimeTranslation: boolean;
     hideOriginals: boolean;
 }
+
+type SubtitleWithHtmlElement = { el: HTMLElement, subtitle: ISubtitle };
 
 export class SubtitlesPanel extends Panel {
     // todo: get rid of JQuery (use the containerEl on Panel instead)
@@ -26,6 +27,8 @@ export class SubtitlesPanel extends Panel {
 
     private readonly dbFavoritesRef: firebase.firestore.CollectionReference;
     private readonly dbSessionsRef: firebase.firestore.CollectionReference;
+
+    private readonly subs: Map<string, SubtitleWithHtmlElement> = new Map();
 
     // todo: use a better authentication manager
     private readonly uid: string;
@@ -126,15 +129,23 @@ export class SubtitlesPanel extends Panel {
                 snapshot.docChanges().forEach(change => {
                     const subtitle = Object.assign(change.doc.data(), { id: change.doc.id }) as ISubtitle;
                     if (change.type === "added") {
-                        this.addSubtitleToDom(subtitle);
+                        const subEl = this.addSubtitleToDom(subtitle);
+                        this.subs.set(subtitle.id, { el: subEl, subtitle });
+
                         if (!subtitle.translation && this.settings.realtimeTranslation) {
                             this.translate(subtitle.id, subtitle.subtitle);
                         }
                     }
                     if (change.type === "modified") {
-                        this.updateSubtitleInDom(subtitle);
-                        if (!subtitle.translation && this.settings.realtimeTranslation) {
-                            this.translate(subtitle.id, subtitle.subtitle);
+                        const sub = this.subs.get(subtitle.id);
+                        if (sub) {
+                            this.updateSubtitle(sub.subtitle, subtitle, sub.el);
+                            sub.subtitle = {...sub.subtitle, ...subtitle};
+                            if (sub.subtitle.translation || (!subtitle.translation && this.settings.realtimeTranslation)) {
+                                this.translate(subtitle.id, subtitle.subtitle);
+                            }
+                        } else {
+                            // TODO: subtitle did not exist on the client yet => add it
                         }
                     }
                     if (change.type === "removed") {
@@ -184,7 +195,7 @@ export class SubtitlesPanel extends Panel {
         this.viewToolbarSetActiveRealTimeButton(realtime);
         this.viewToolbarToggleHideOriginalsButton(realtime);
 
-        if (!this.settings.realtimeTranslation){
+        if (!this.settings.realtimeTranslation) {
             this.settingsSetHideOriginals(false);
         }
     }
@@ -224,56 +235,90 @@ export class SubtitlesPanel extends Panel {
         this.$container.toggleClass("hide-originals", hideOriginals);
     }
 
-    private getSubitleTemplate(sub: ISubtitle): JQuery {
-        const $template = $(`
+    private controllerShouldHideOriginals() {
+        return this.settings.hideOriginals;
+    }
+
+    private getSubitleTemplate(sub: ISubtitle): string {
+        return `
             <div class="sub ${sub.translation ? "has-translation" : "no-translation"}" data-subid="${sub.id}">
-                <p class="original">${sub.subtitle}</p>
-            </div>`);
+                <p class="original${this.controllerShouldHideOriginals() ? " hide" : ""}">${sub.subtitle}</p>
+                ${sub.translation ? this.getSubtitleTranslationTemplate(sub) : ""}
+                <div class="clear last"></div>
+            </div>`;
+    }
 
-        if (sub.translation) {
-            // TODO: reduce into single append!
-            $template.append(`<p class="translation">${sub.translation}</p>`);
-            $template.append(`
-                <div class="sub-controls">
-                    <span class="fav${!sub.favoriteId ? "" : " hide"}">☆</span>
-                    <span class="unfav${sub.favoriteId ? "" : " hide"}">★</span>
-                </div>`);
-            $template.append(`<div class="clear"></div>`);
-        }
+    private getSubtitleTranslationTemplate(sub: ISubtitle): string {
+        return `
+                <p class="translation">${sub.translation}</p>
+                ${this.getSubtitleControlsTemplate(sub)}
+            `;
+    }
 
-        return $template;
+    private getSubtitleControlsTemplate(sub: ISubtitle): string {
+        return `
+            <div class="sub-controls">
+                <span class="fav${!sub.favoriteId ? "" : " hide"}">☆</span>
+                <span class="unfav${sub.favoriteId ? "" : " hide"}">★</span>
+            </div>`;
     }
 
     private addSubtitleToDom(sub: ISubtitle) {
-        if (!this.$container)
-            return;
-
         // todo: use an dictionary to keep reference of subtitles in DOM by id
-        const $template = this.getSubitleTemplate(sub);
+        const template = this.getSubitleTemplate(sub);
+        const lastSub = getLastValueInMap<SubtitleWithHtmlElement>(this.subs);
+        const isMulti = sub.time && lastSub && lastSub.subtitle.time === sub.time;
 
         // based on current scroll position, decide before appending new item to DOM
         const canScrollDown = this.canScrollDown();
 
+        const $template = $(template);
         this.$container.append($template);
 
+        if (isMulti) {
+            $template.addClass("multi");
+            // WARNING: THIS MUST BE OPTIMIZED!
+            this.subs.forEach(s => s.el.classList.remove("multi"));
+            lastSub!.el.classList.add("multi");
+        }
+
         if (canScrollDown) this.scrollDown();
+
+        return $template[0];
     }
 
     private canScrollDown(): boolean {
         return window.innerHeight + window.scrollY >= document.body.offsetHeight;
     }
 
-    private updateSubtitleInDom(sub: ISubtitle) {
-        if (!this.$container)
-            return;
-
-        const $template = this.getSubitleTemplate(sub);
-
+    private updateSubtitle(oldSub: ISubtitle, newSub: ISubtitle, subEl: HTMLElement) {
         // based on current scroll position, decide before appending new item to DOM
         const canScrollDown = this.canScrollDown();
 
-        // todo: use an dictionary to keep reference of subtitles in DOM by id
-        this.$container.find(`.sub[data-subid=${sub.id}]`).replaceWith($template);
+        // update original?
+        if (oldSub.subtitle !== newSub.subtitle) {
+            subEl.querySelector(".original")!.textContent = newSub.subtitle;
+        }
+
+
+        // update translation?
+        subEl.classList.toggle("has-translation", !!newSub.translation);
+        subEl.classList.toggle("no-translation", !newSub.translation);
+        if (!oldSub.translation && newSub.translation) {
+            const translationEl = this.getSubtitleTranslationTemplate(newSub);
+            subEl.querySelector(".last")!.insertAdjacentHTML("beforebegin", translationEl);
+        } else if (newSub.translation) {
+            if (oldSub.translation !== newSub.translation) {
+                subEl.querySelector(".translation")!.textContent = newSub.translation;
+            }
+            if (newSub.favoriteId !== oldSub.favoriteId) {
+                const subControlsEl = subEl.querySelector(".sub-controls");
+                if (subControlsEl) {
+                    subControlsEl.querySelector(".fav")!.classList.toggle("hide", !!newSub.favoriteId);
+                    subControlsEl.querySelector(".unfav")!.classList.toggle("hide", !newSub.favoriteId);
+                }
+            }
+        }
 
         if (canScrollDown) this.scrollDown();
     }

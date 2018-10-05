@@ -44,18 +44,28 @@ body {
     width: 100%;
   }
 
-  .subs .hide-originals {
-    .sub.no-translation {
-      display: none;
-    }
-    .sub.has-translation p.original {
-      display: none;
-    }
-  }
-
   .subs {
     padding-bottom: 6vh;
     padding-top: 50px;
+
+    .hide-originals {
+      .sub.no-translation {
+        display: none;
+      }
+      .sub.has-translation p.original {
+        display: none;
+      }
+    }
+
+    // to overwrite "hide" class set on elements added while hide-translation setting is actuve
+    :not(.hide-originals) {
+      .sub.no-translation {
+        display: block;
+      }
+      .sub.has-translation p.original {
+        display: block;
+      }
+    }
 
     .sub {
       @include disableTouchOverlay;
@@ -94,22 +104,29 @@ body {
     .single-view .sub {
       display: none;
 
-      &:last-child, &.selected {
+      &:last-child, &.multi {
         background:#1c1c1c;
         display: block;
         position: fixed;
         height: 90vh;
         display: flex;
-        justify-content: center;
         align-items: center;
         text-align: center;
         flex-direction: column;
-        top: 0;
-        font-size: 1.6em;
+        top: 50px;
+        font-size: 1.2em;
         font-weight: bold;
 
         .sub-controls {
           top: auto;
+        }
+      }
+
+      &.multi {
+        height: 45vh;
+
+        &:last-child {
+          top: 45vh;
         }
       }
     }

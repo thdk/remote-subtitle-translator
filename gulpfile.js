@@ -1,11 +1,12 @@
 
 // Add our dependencies
-var gulp = require('gulp');
-var ts = require('gulp-typescript');
-var sass = require('gulp-sass'); // Gulp File concatenation plugin
+const gulp = require('gulp');
+const ts = require('gulp-typescript');
+const sass = require('gulp-sass'); // Gulp File concatenation plugin
+const rev = require('gulp-rev');
 
 // Configuration
-var configuration = {
+const configuration = {
     paths: {
         src: {
             html: './src/*.html',
@@ -44,6 +45,7 @@ var tsProject = ts.createProject('tsconfig.json');
 gulp.task('tsc', function () {
     return gulp.src('src/**/*.ts')
         .pipe(tsProject())
+        .pipe(rev()) // Static asset revisioning by appending content hash to filenames
         .pipe(gulp.dest('dist/js'));
 });
 
