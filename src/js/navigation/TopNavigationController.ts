@@ -11,7 +11,6 @@ export class TopNavigationController implements ITopNavigationController, IListe
     private readonly view: ITopNavigationView;
     private readonly broadcaster: IBroadcaster;
 
-    // todo: use a panelDashboard to control multiple panels
     constructor(panelDashboard: PanelDashboard, view: ITopNavigationView){
         this.panelDashboard = panelDashboard;
         this.view = view;

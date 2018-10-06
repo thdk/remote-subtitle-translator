@@ -58,8 +58,8 @@ export class SubtitlesPanel extends Panel {
         this.toolbarToggleSingleViewButtonEl = this.$toolbar.find(".toggleSingleView")[0];
 
         // reflect default settings in view with their side effects
-        this.settingsSetHideOriginals(this.settings.hideOriginals);
-        this.settingsSetRealtimeTranslation(this.settings.realtimeTranslation);
+        this.controllerSettingsSetHideOriginals(this.settings.hideOriginals);
+        this.controllerSettingsSetRealtimeTranslation(this.settings.realtimeTranslation);
 
         this.translateService = translateService;
         this.dbFavoritesRef = dbFavoritesRef;
@@ -74,16 +74,12 @@ export class SubtitlesPanel extends Panel {
         if (!this.containerEl || !this.$toolbar)
             return;
 
-        this.$container.on("click.rst", ".sub", e => {
+        this.$container.on("click.rst", ".sub:not(.has-translation)", e => {
             const $target = $(e.currentTarget);
-
-            // don't translate twice
-            if (!$target.find("p.translation").length) {
-                const subId = $target.attr("data-subid");
+            const subId = $target.attr("data-subid");
+            if (subId) {
                 const text = $target.find("p.original").html();
-                if (subId) {
-                    this.translate(subId, text);
-                }
+                this.controllerTranslate(subId, text);
             }
         });
 
@@ -124,25 +120,38 @@ export class SubtitlesPanel extends Panel {
             this.controllerToggleSingleViewClicked(!document.querySelector("body")!.classList.contains("single-view"));
         });
 
+        this.controllerSubscribe();
+    }
+
+    protected deinit() {
+        this.controllerDispose();
+
+        this.$container.off(".rst");
+        this.$toolbar.off(".rst");
+        super.deinit();
+    }
+
+    public controllerSubscribe() {
+        // move to controller
         this.unsubscribe = this.dbSubtitlesRef.orderBy("created")
             .onSnapshot(snapshot => {
                 snapshot.docChanges().forEach(change => {
                     const subtitle = Object.assign(change.doc.data(), { id: change.doc.id }) as ISubtitle;
                     if (change.type === "added") {
-                        const subEl = this.addSubtitleToDom(subtitle);
+                        const subEl = this.viewAddSubtitleToDom(subtitle);
                         this.subs.set(subtitle.id, { el: subEl, subtitle });
 
                         if (!subtitle.translation && this.settings.realtimeTranslation) {
-                            this.translate(subtitle.id, subtitle.subtitle);
+                            this.controllerTranslate(subtitle.id, subtitle.subtitle);
                         }
                     }
                     if (change.type === "modified") {
                         const sub = this.subs.get(subtitle.id);
                         if (sub) {
-                            this.updateSubtitle(sub.subtitle, subtitle, sub.el);
-                            sub.subtitle = {...sub.subtitle, ...subtitle};
+                            this.viewUpdateSubtitleInDom(sub.subtitle, subtitle, sub.el);
+                            sub.subtitle = { ...sub.subtitle, ...subtitle };
                             if (sub.subtitle.translation || (!subtitle.translation && this.settings.realtimeTranslation)) {
-                                this.translate(subtitle.id, subtitle.subtitle);
+                                this.controllerTranslate(subtitle.id, subtitle.subtitle);
                             }
                         } else {
                             // TODO: subtitle did not exist on the client yet => add it
@@ -155,12 +164,8 @@ export class SubtitlesPanel extends Panel {
             });
     }
 
-    protected deinit() {
+    public controllerDispose() {
         if (this.unsubscribe) this.unsubscribe();
-
-        this.$container.off(".rst");
-        this.$toolbar.off(".rst");
-        super.deinit();
     }
 
     public openAsync() {
@@ -176,7 +181,7 @@ export class SubtitlesPanel extends Panel {
         this.$container.empty();
     }
 
-    private translate(subId: string, text: string) {
+    private controllerTranslate(subId: string, text: string) {
         this.translateService.translate(text).then(translation => {
             if (this.dbSubtitlesRef) {
                 this.dbSubtitlesRef.doc(subId).update({ translation });
@@ -187,22 +192,34 @@ export class SubtitlesPanel extends Panel {
     }
 
     private controllerRealtimeTranslationClicked() {
-        this.settingsSetRealtimeTranslation(!this.settings.realtimeTranslation);
+        this.controllerSettingsSetRealtimeTranslation(!this.settings.realtimeTranslation);
     }
 
-    private settingsSetRealtimeTranslation(realtime: boolean) {
+    private controllerSettingsSetRealtimeTranslation(realtime: boolean) {
         this.settings.realtimeTranslation = realtime;
         this.viewToolbarSetActiveRealTimeButton(realtime);
         this.viewToolbarToggleHideOriginalsButton(realtime);
 
         if (!this.settings.realtimeTranslation) {
-            this.settingsSetHideOriginals(false);
+            this.controllerSettingsSetHideOriginals(false);
         }
     }
 
-    private settingsSetHideOriginals(hideOriginals: boolean) {
+    private controllerSettingsSetHideOriginals(hideOriginals: boolean) {
         this.settings.hideOriginals = hideOriginals;
         this.viewSetActiveHideOriginals(hideOriginals);
+    }
+
+    private controllerHideOriginalsClicked() {
+        this.controllerSettingsSetHideOriginals(!this.settings.hideOriginals);
+    }
+
+    private controllerToggleSingleViewClicked(singleView: boolean) {
+        this.viewSetSingleViewMode(singleView);
+    }
+
+    private controllerShouldHideOriginals() {
+        return this.settings.hideOriginals;
     }
 
     private viewToolbarSetActiveRealTimeButton(isRealtime: boolean) {
@@ -211,14 +228,6 @@ export class SubtitlesPanel extends Panel {
 
     private viewToolbarSetActiveHideOriginalsButton(hideOriginals: boolean) {
         this.toolbarHideOriginalsButtonEl.classList.toggle("active", hideOriginals);
-    }
-
-    private controllerHideOriginalsClicked() {
-        this.settingsSetHideOriginals(!this.settings.hideOriginals);
-    }
-
-    private controllerToggleSingleViewClicked(singleView: boolean) {
-        this.viewSetSingleViewMode(singleView);
     }
 
     private viewSetSingleViewMode(singleView) {
@@ -235,27 +244,23 @@ export class SubtitlesPanel extends Panel {
         this.$container.toggleClass("hide-originals", hideOriginals);
     }
 
-    private controllerShouldHideOriginals() {
-        return this.settings.hideOriginals;
-    }
-
-    private getSubitleTemplate(sub: ISubtitle): string {
+    private viewGetSubtitleTemplate(sub: ISubtitle): string {
         return `
             <div class="sub ${sub.translation ? "has-translation" : "no-translation"}" data-subid="${sub.id}">
                 <p class="original${this.controllerShouldHideOriginals() ? " hide" : ""}">${sub.subtitle}</p>
-                ${sub.translation ? this.getSubtitleTranslationTemplate(sub) : ""}
+                ${sub.translation ? this.viewGetSubtitleTranslationTemplate(sub) : ""}
                 <div class="clear last"></div>
             </div>`;
     }
 
-    private getSubtitleTranslationTemplate(sub: ISubtitle): string {
+    private viewGetSubtitleTranslationTemplate(sub: ISubtitle): string {
         return `
                 <p class="translation">${sub.translation}</p>
-                ${this.getSubtitleControlsTemplate(sub)}
+                ${this.viewGetSubtitleControlsTemplate(sub)}
             `;
     }
 
-    private getSubtitleControlsTemplate(sub: ISubtitle): string {
+    private viewGetSubtitleControlsTemplate(sub: ISubtitle): string {
         return `
             <div class="sub-controls">
                 <span class="fav${!sub.favoriteId ? "" : " hide"}">☆</span>
@@ -263,14 +268,14 @@ export class SubtitlesPanel extends Panel {
             </div>`;
     }
 
-    private addSubtitleToDom(sub: ISubtitle) {
+    private viewAddSubtitleToDom(sub: ISubtitle) {
         // todo: use an dictionary to keep reference of subtitles in DOM by id
-        const template = this.getSubitleTemplate(sub);
+        const template = this.viewGetSubtitleTemplate(sub);
         const lastSub = getLastValueInMap<SubtitleWithHtmlElement>(this.subs);
         const isMulti = sub.time && lastSub && lastSub.subtitle.time === sub.time;
 
         // based on current scroll position, decide before appending new item to DOM
-        const canScrollDown = this.canScrollDown();
+        const canScrollDown = this.viewCanScrollDown();
 
         const $template = $(template);
         this.$container.append($template);
@@ -287,25 +292,24 @@ export class SubtitlesPanel extends Panel {
         return $template[0];
     }
 
-    private canScrollDown(): boolean {
+    private viewCanScrollDown(): boolean {
         return window.innerHeight + window.scrollY >= document.body.offsetHeight;
     }
 
-    private updateSubtitle(oldSub: ISubtitle, newSub: ISubtitle, subEl: HTMLElement) {
+    private viewUpdateSubtitleInDom(oldSub: ISubtitle, newSub: ISubtitle, subEl: HTMLElement) {
         // based on current scroll position, decide before appending new item to DOM
-        const canScrollDown = this.canScrollDown();
+        const canScrollDown = this.viewCanScrollDown();
 
         // update original?
         if (oldSub.subtitle !== newSub.subtitle) {
             subEl.querySelector(".original")!.textContent = newSub.subtitle;
         }
 
-
         // update translation?
         subEl.classList.toggle("has-translation", !!newSub.translation);
         subEl.classList.toggle("no-translation", !newSub.translation);
         if (!oldSub.translation && newSub.translation) {
-            const translationEl = this.getSubtitleTranslationTemplate(newSub);
+            const translationEl = this.viewGetSubtitleTranslationTemplate(newSub);
             subEl.querySelector(".last")!.insertAdjacentHTML("beforebegin", translationEl);
         } else if (newSub.translation) {
             if (oldSub.translation !== newSub.translation) {
