@@ -10,19 +10,26 @@ const configuration = {
     paths: {
         src: {
             html: './src/*.html',
+            images: './src/images/*.png',
             css: [
                 './src/css/*.scss'
             ],
-            js: '/src/js/*.ts'
+            js: './src/js/*.ts',
+            manifest: './src/manifest.json'
         },
         dist: './dist'
     }
 };
 
 // Gulp task to copy HTML files to output directory
-gulp.task('html', function() {
-    gulp.src(configuration.paths.src.html)
+gulp.task('root', function() {
+    gulp.src([configuration.paths.src.html, configuration.paths.src.manifest])
         .pipe(gulp.dest(configuration.paths.dist));
+});
+
+gulp.task('images', function() {
+    gulp.src(configuration.paths.src.images)
+        .pipe(gulp.dest(configuration.paths.dist + '/images'));
 });
 
 // Gulp task to concatenate our scss files

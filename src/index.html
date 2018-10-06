@@ -5,8 +5,13 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<title>Remote subtitle translator</title>
 	<meta name="description" content="">
+	<!-- Disable address bar if launched from start screen on mobile device -->
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<link rel="icon" sizes="192x192" href="images/192.png">
 	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, user-scalable=no">
 	<link href="css/style.css?3" rel="stylesheet" />
+	<link rel="manifest" href="manifest.json" />
 	<script src="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.js"></script>
 	<link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.css" />
 </head>
@@ -21,13 +26,13 @@
 	<script src="./js/app.js?1"></script>
 
 	<div id="top-navigation">
-		<div class="nav-item" data-item-name="subtitles">
+		<div class="nav-item" data-item-name="subtitles" title="Subtitle viewer">
 			<span class="subtitles">☲</span>
 		</div>
-		<div class="nav-item" data-item-name="favorite-subtitles">
+		<div class="nav-item" data-item-name="favorite-subtitles" title="Favorite subtitles">
 			<span class="favorites">★</span>
 		</div>
-		<div class="nav-item" data-item-name="settings">
+		<div class="nav-item" data-item-name="settings" title="Settings">
 			<span class="settings">☀</span>
 		</div>
 	</div>
@@ -41,16 +46,16 @@
 		</div>
 		<div id="toolbar">
 			<ul>
-				<li class="float-left">
+				<li class="float-left" title="Toggle realtime translation">
 					<a href="#" class="toggleRealtime">♺</a>
 				</li>
-				<li class="float-left">
+				<li class="float-left" title="Toggle translation only">
 					<a href="#" class="hideOriginals">▣</a>
 				</li>
-				<li class="float-right">
+				<li class="float-right" title="Toggle video playback">
 					<a href="#" class="toggleplayback">&#10074;&#10074;&#9658;</a>
 				</li>
-				<li class="float-right">
+				<li class="float-right" title="Toggle single view">
 					<a href="#" class="toggleSingleView">▩</a>
 				</li>
 			</ul>

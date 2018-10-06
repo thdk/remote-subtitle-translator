@@ -8,11 +8,11 @@
     "tsc": "tsc",
     "tsc:w": "tsc -w",
     "scss": "gulp scss",
-    "html": "gulp html",
+    "root": "gulp root",
     "rollup": "rollup -c",
     "serve": "firebase serve",
     "build": "npm run tsc && npm run rollup",
-    "buildall": "npm run build && npm run html && npm run scss",
+    "buildall": "npm run build && npm run root && npm run scss",
     "start": "npm run buildall && npm run serve"
   },
   "repository": {

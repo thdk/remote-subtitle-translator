@@ -8,6 +8,10 @@ body {
     font-size: $font-size;
     padding: 0;
     margin: 0;
+
+    &.single-view {
+      overflow: hidden;
+    }
   }
 
   a:visited, a:link, a:hover, a:active{
@@ -95,40 +99,40 @@ body {
         width: 12%;
         font-size: 2em;
       }
+
+      .single-view & {
+        display: none;
+
+        &:last-child, &.multi {
+          background:#1c1c1c;
+          display: block;
+          position: fixed;
+          height: 90vh;
+          display: flex;
+          align-items: center;
+          text-align: center;
+          flex-direction: column;
+          top: 50px;
+          font-size: 1.2em;
+          font-weight: bold;
+
+          .sub-controls {
+            top: auto;
+          }
+        }
+
+        &.multi {
+          height: 45vh;
+
+          &:last-child {
+            top: 45vh;
+          }
+        }
+      }
     }
 
     .sub:nth-child(odd) {
       background:#1c1c1c;
-    }
-
-    .single-view .sub {
-      display: none;
-
-      &:last-child, &.multi {
-        background:#1c1c1c;
-        display: block;
-        position: fixed;
-        height: 90vh;
-        display: flex;
-        align-items: center;
-        text-align: center;
-        flex-direction: column;
-        top: 50px;
-        font-size: 1.2em;
-        font-weight: bold;
-
-        .sub-controls {
-          top: auto;
-        }
-      }
-
-      &.multi {
-        height: 45vh;
-
-        &:last-child {
-          top: 45vh;
-        }
-      }
     }
   }
 

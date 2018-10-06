@@ -96,7 +96,7 @@ export class SubtitlesPanel extends Panel {
                 throw new Error("Can't add subtitle to favorites. No element .sub found with attibute: data-subid");
             }
 
-            this.toggleSubtitleInFavoritesAsync(subId);
+            this.controllerToggleSubtitleInFavoritesAsync(subId);
         });
 
         this.$toolbar.on("click.rst touch.rst", ".toggleplayback", e => {
@@ -121,7 +121,7 @@ export class SubtitlesPanel extends Panel {
 
         this.$toolbar.on("click.rst touch.rst", ".toggleSingleView", e => {
             e.preventDefault();
-            this.controllerToggleSingleViewClicked(!this.$container.hasClass("single-view"));
+            this.controllerToggleSingleViewClicked(!document.querySelector("body")!.classList.contains("single-view"));
         });
 
         this.unsubscribe = this.dbSubtitlesRef.orderBy("created")
@@ -222,7 +222,7 @@ export class SubtitlesPanel extends Panel {
     }
 
     private viewSetSingleViewMode(singleView) {
-        this.$container.toggleClass("single-view", singleView);
+        document.querySelector("body")!.classList.toggle("single-view", singleView);
         if (!singleView) this.scrollDown();
     }
 
@@ -323,7 +323,7 @@ export class SubtitlesPanel extends Panel {
         if (canScrollDown) this.scrollDown();
     }
 
-    private toggleSubtitleInFavoritesAsync(subId: string) {
+    private controllerToggleSubtitleInFavoritesAsync(subId: string) {
         if (!this.dbFavoritesRef) {
             throw new Error("Can't add favorite subtitle: dbFavoriteSubtitlesRef is undefined.")
         }
