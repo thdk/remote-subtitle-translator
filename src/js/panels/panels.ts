@@ -24,7 +24,7 @@ export class Panel implements IPanel {
     }
 
     public openAsync() {
-        return new Promise<void>((resolve, reject) => {
+        return new Promise<void>(resolve => {
             // hide all open panels
             const panels = document.querySelectorAll('.panel');
             for (let index = 0; index < panels.length; index++) {

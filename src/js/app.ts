@@ -6,17 +6,16 @@ import {  ITranslateService, HttpNetwork, GoogleTranslate, ISession } from './li
 import { SettingsPanel } from './panels/settings';
 import { TopNavigationView, ITopNavigationView } from './navigation/TopNavigationView';
 import { TopNavigationController } from './navigation/TopNavigationController';
-import { SubtitlesPanel } from './panels/subtitles';
 import { PanelDashboard } from './panels/dashboard';
 import { FavoriteSubtitlesPanel } from './panels/favoriteSubtitles';
-
-import * as pubsub from 'pubsub-js'
 
 // This import loads the firebase namespace along with all its type information.
 import * as firebase from "firebase";
 // These imports load individual services into the firebase namespace.
 import 'firebase/auth';
 import 'firebase/database';
+import { SubtitlesPanelView } from './panels/subtitles/SubtitlesPanelView';
+import { SubtitlesPanelController } from './panels/subtitles/SubtitlesPanelController';
 
 export class RemoteSubtitleReceiver {
     private firestore?: firebase.firestore.Firestore;
@@ -27,7 +26,7 @@ export class RemoteSubtitleReceiver {
     private authenticator?: AuthenticationPanel;
     private readonly settingsPanel: SettingsPanel;
     private readonly subtitlePlayerEl: HTMLElement;
-    private subtitlesPanel?: SubtitlesPanel;
+    private subtitlesPanel?: SubtitlesPanelView;
     private readonly favoriteSubtitlesEl: HTMLElement;
     private favoriteSubtitlesPanel?: FavoriteSubtitlesPanel;
 
@@ -97,15 +96,16 @@ export class RemoteSubtitleReceiver {
                 }
                 if (session) {
                     const dbSubtitlesRef = this.dbSessionsRef!.doc(session!.id).collection("subtitles");
-    
+
                     if (!this.dbFavoriteSubtitlesRef) throw new Error("this.dbFavoriteSubtitlesRef is undefined");
 
-                    this.subtitlesPanel = new SubtitlesPanel(this.subtitlePlayerEl, uid, dbSubtitlesRef, this.dbFavoriteSubtitlesRef, this.dbSessionsRef!, session, this.translateService);
+                    const controllerCreator = (view) => new SubtitlesPanelController(view, dbSubtitlesRef, this.dbFavoriteSubtitlesRef!, this.dbSessionsRef!, session!, this.translateService);
+                    this.subtitlesPanel = new SubtitlesPanelView(this.subtitlePlayerEl, controllerCreator);
                     this.panelDashboard.setPanel(this.subtitlesPanel);
-    
+
                     this.favoriteSubtitlesPanel = new FavoriteSubtitlesPanel(this.favoriteSubtitlesEl, this.dbFavoriteSubtitlesRef, dbSubtitlesRef);
                     this.panelDashboard.setPanel(this.favoriteSubtitlesPanel);
-    
+
                    this.panelDashboard.showPanel(this.subtitlesPanel.name);
                 } else {
                     throw new Error("No sessions found");

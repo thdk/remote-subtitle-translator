@@ -1,3 +1,26 @@
+// TODO: move commented namespaces into their own module
+
+// namespace thdk {
+    export interface IDisposable {
+        dispose:() => void;
+    }
+//}
+
+// namespace thdk.firebase.auth {
+    import * as firebase from "firebase";
+    import 'firebase/auth';
+
+    export const getCurrentUserAsync = () => {
+        return new Promise<firebase.User>((resolve, reject) => {
+            const unsubscribe = firebase.auth().onAuthStateChanged(user => {
+                unsubscribe();
+                if (user) resolve(user);
+                reject("Not authenticated");
+            });
+        });
+    }
+//}
+
 // namespace thdk.rst {
     export interface ILoggedInMessage {
         uid: string;
@@ -10,6 +33,7 @@
         favoriteId?: string;
         created: any;
         time?: number;
+        isMulti: boolean;
     }
 
     export interface ISession {
@@ -25,8 +49,6 @@
             uid: string;
     }
 //}
-
-declare var firebaseui: any;
 
 // namespace thdk.translate {
     export interface ITranslateService {
