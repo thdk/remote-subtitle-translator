@@ -141,8 +141,9 @@ export class SubtitlesPanelView extends Panel {
         this.$container.append($template);
 
         if (sub.isMulti) {
+            // TODO: optimize removal of multi class
+            this.$container.find(".sub.multi:not([data-subtime='" + sub.time +"'])").removeClass("multi");
             $template.addClass("multi");
-            // this.subs.forEach(s => s.el.classList.remove("multi"));
         }
 
         if (canScrollDown) this.scrollDown();
@@ -189,7 +190,7 @@ export class SubtitlesPanelView extends Panel {
 
     private getSubtitleTemplate(sub: ISubtitle): string {
         return `
-            <div class="sub ${sub.translation ? "has-translation" : "no-translation"}" data-subid="${sub.id}">
+            <div class="sub ${sub.translation ? "has-translation" : "no-translation"}" data-subid="${sub.id}" data-subtime="${sub.time}">
                 <p class="original${this.controller.shouldHideOriginals() ? " hide" : ""}">${sub.subtitle}</p>
                 ${sub.translation ? this.getSubtitleTranslationTemplate(sub) : ""}
                 <div class="clear last"></div>

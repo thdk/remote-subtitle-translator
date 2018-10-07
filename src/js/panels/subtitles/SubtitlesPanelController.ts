@@ -90,11 +90,12 @@ export class SubtitlesPanelController implements ISubtitlesPanelController, ILis
                         }
                     }
                     if (change.type === "modified") {
-                        let sub = this.subs[subtitle.id];
-                        if (sub) {
-                            this.view.updateSubtitleInDom(sub, subtitle);
-                            sub = { ...sub, ...subtitle };
-                            if (sub.translation || (!subtitle.translation && this.settings.realtimeTranslation)) {
+                        const oldSub = { ...this.subs[subtitle.id]};
+                        if (oldSub) {
+                            const newSub = { ...oldSub, ...subtitle };
+                            this.subs[subtitle.id] = newSub;
+                            this.view.updateSubtitleInDom(oldSub, newSub);
+                            if (oldSub.translation || (!subtitle.translation && this.settings.realtimeTranslation)) {
                                 this.translate(subtitle.id, subtitle.subtitle);
                             }
                         } else {

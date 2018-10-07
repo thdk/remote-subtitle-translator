@@ -61,16 +61,6 @@ body {
       }
     }
 
-    // to overwrite "hide" class set on elements added while hide-translation setting is actuve
-    :not(.hide-originals) {
-      .sub.no-translation {
-        display: block;
-      }
-      .sub.has-translation p.original {
-        display: block;
-      }
-    }
-
     .sub {
       @include disableTouchOverlay;
       position: relative;
@@ -129,6 +119,10 @@ body {
           }
         }
       }
+    }
+
+    .single-view .sub.sub.no-translation:not(.multi), .single-view .sub.sub.has-translation:not(.multi) {
+      display: none;
     }
 
     .sub:nth-child(odd) {
