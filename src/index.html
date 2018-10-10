@@ -12,6 +12,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, user-scalable=no">
 	<link href="css/style.css?3" rel="stylesheet" />
 	<link rel="manifest" href="manifest.json" />
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 	<script src="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.js"></script>
 	<link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.css" />
 </head>
@@ -24,6 +25,27 @@
 	<script src="https://www.gstatic.com/firebasejs/5.0.4/firebase-firestore.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/pubsub-js/1.6.1/pubsub.min.js"></script>
 	<script src="./js/app.js?1"></script>
+
+	<aside class="mdc-drawer mdc-drawer--modal">
+		<div class="mdc-drawer__content">
+			<nav class="mdc-list">
+				<a class="mdc-list-item mdc-list-item--activated" data-item-name="subtitles" href="#" aria-selected="true">
+					<i class="material-icons mdc-list-item__graphic" aria-hidden="true">subtitles</i>
+					<span class="mdc-list-item__text">Remote subtitles</span>
+				</a>
+				<a class="mdc-list-item" href="#" data-item-name="favorite-subtitles">
+					<i class="material-icons mdc-list-item__graphic" aria-hidden="true">favorite</i>
+					<span class="mdc-list-item__text">Favorites</span>
+				</a>
+				<a class="mdc-list-item" href="#" data-item-name="settings">
+					<i class="material-icons mdc-list-item__graphic" aria-hidden="true">tune</i>
+					<span class="mdc-list-item__text">Settings</span>
+				</a>
+			</nav>
+		</div>
+	</aside>
+
+	<div class="mdc-drawer-scrim"></div>
 
 	<div id="top-navigation">
 		<div class="nav-item" data-item-name="subtitles" title="Subtitle viewer">
@@ -46,6 +68,11 @@
 		</div>
 		<div id="toolbar">
 			<ul>
+				<li class="float-left">
+					<a href="#" class="toggleDrawer">
+						<i class="material-icons mdc-list-item__graphic" aria-hidden="true">menu</i>
+					</a>
+				</li>
 				<li class="float-left" title="Toggle realtime translation">
 					<a href="#" class="toggleRealtime">♺</a>
 				</li>

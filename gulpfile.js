@@ -2,7 +2,7 @@
 // Add our dependencies
 const gulp = require('gulp');
 const ts = require('gulp-typescript');
-const sass = require('gulp-sass'); // Gulp File concatenation plugin
+const sass = require('gulp-sass');
 const rev = require('gulp-rev');
 
 // Configuration
@@ -35,7 +35,9 @@ gulp.task('images', function() {
 // Gulp task to concatenate our scss files
 gulp.task('scss', function () {
    gulp.src(configuration.paths.src.css)
-       .pipe(sass().on('error', sass.logError))
+       .pipe(sass({
+        includePaths: ['node_modules/']
+      }).on('error', sass.logError))
        .pipe(gulp.dest(configuration.paths.dist + '/css'))
 });
 

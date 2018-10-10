@@ -12,6 +12,10 @@ export interface ISubtitlesPanelView {
     updateSubtitleInDom(oldSub: ISubtitle, newSub: ISubtitle);
 }
 
+export interface ISubtitlesPanelViewDependencies {
+    toggleDrawer: () => void;
+}
+
 export class SubtitlesPanelView extends Panel {
     private readonly controller: ISubtitlesPanelController;
 
@@ -20,10 +24,14 @@ export class SubtitlesPanelView extends Panel {
     private readonly toolbarRealtimeButtonEl: HTMLElement;
     private readonly toolbarHideOriginalsButtonEl: HTMLElement;
     private readonly toolbarToggleSingleViewButtonEl: HTMLElement;
+    private readonly toolbarToggleDrawerButtonel: HTMLElement;
     private readonly subs: {[id: string]: HTMLElement} = {};
+    private readonly toolbarToggleDrawer: () => void;
 
-    constructor(container: HTMLElement, controllerCreator: (view: ISubtitlesPanelView) => ISubtitlesPanelController) {
+    constructor(container: HTMLElement, controllerCreator: (view: ISubtitlesPanelView) => ISubtitlesPanelController, deps: ISubtitlesPanelViewDependencies) {
         super("subtitles", container);
+
+        this.toolbarToggleDrawer = deps.toggleDrawer;
 
         const subsPlaceholderEl = this.containerEl.querySelector("#subsContainer");
         if (!subsPlaceholderEl) throw new Error("Subtitle panel must have a placeholder element for subs");
@@ -34,6 +42,7 @@ export class SubtitlesPanelView extends Panel {
         this.toolbarRealtimeButtonEl = this.$toolbar.find(".toggleRealtime")[0];
         this.toolbarHideOriginalsButtonEl = this.$toolbar.find(".hideOriginals")[0];
         this.toolbarToggleSingleViewButtonEl = this.$toolbar.find(".toggleSingleView")[0];
+        this.toolbarToggleDrawerButtonel = this.$toolbar.find(".toggleDrawer")[0];
 
         this.controller = controllerCreator(this);
     }
@@ -85,6 +94,10 @@ export class SubtitlesPanelView extends Panel {
             this.controller.toggleSingleView(!document.querySelector("body")!.classList.contains("single-view"));
         });
 
+        this.$toolbar.on("click.rst, touch.rst", ".toggleDrawer", e => {
+            e.preventDefault();
+            this.toolbarToggleDrawer();
+        });
     }
 
     protected deinit() {

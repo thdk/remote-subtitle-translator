@@ -4,8 +4,7 @@ import { IBroadcaster, PubSubBroadcaster } from './broadcaster';
 import { AuthenticationPanel } from './panels/authentication';
 import {  ITranslateService, HttpNetwork, GoogleTranslate, ISession } from './lib';
 import { SettingsPanel } from './panels/settings';
-import { TopNavigationView, ITopNavigationView } from './navigation/TopNavigationView';
-import { TopNavigationController } from './navigation/TopNavigationController';
+import { INavigationView } from './navigation/TopNavigationView';
 import { PanelDashboard } from './panels/dashboard';
 import { FavoriteSubtitlesPanel } from './panels/favoriteSubtitles';
 
@@ -16,6 +15,8 @@ import 'firebase/auth';
 import 'firebase/database';
 import { SubtitlesPanelView } from './panels/subtitles/SubtitlesPanelView';
 import { SubtitlesPanelController } from './panels/subtitles/SubtitlesPanelController';
+import { DrawerNavigationView } from './navigation/DrawerNavigationView';
+import { NavigationController } from './navigation/NavigationController';
 
 export class RemoteSubtitleReceiver {
     private firestore?: firebase.firestore.Firestore;
@@ -32,7 +33,7 @@ export class RemoteSubtitleReceiver {
 
     private readonly translateService: ITranslateService;
 
-    private readonly topNavigation: ITopNavigationView;
+    private readonly navigation: INavigationView;
 
     private firebaseApp: firebase.app.App;
 
@@ -48,7 +49,7 @@ export class RemoteSubtitleReceiver {
         this.translateService = translateService;
 
         this.panelDashboard = new PanelDashboard();
-        this.topNavigation = new TopNavigationView((view) => new TopNavigationController(this.panelDashboard, view));
+        this.navigation = new DrawerNavigationView(view => new NavigationController(this.panelDashboard, view));
 
         this.broadcaster = new PubSubBroadcaster();
 
@@ -100,7 +101,7 @@ export class RemoteSubtitleReceiver {
                     if (!this.dbFavoriteSubtitlesRef) throw new Error("this.dbFavoriteSubtitlesRef is undefined");
 
                     const controllerCreator = (view) => new SubtitlesPanelController(view, dbSubtitlesRef, this.dbFavoriteSubtitlesRef!, this.dbSessionsRef!, session!, this.translateService);
-                    this.subtitlesPanel = new SubtitlesPanelView(this.subtitlePlayerEl, controllerCreator);
+                    this.subtitlesPanel = new SubtitlesPanelView(this.subtitlePlayerEl, controllerCreator, { toggleDrawer: () => this.navigation.toggle() });
                     this.panelDashboard.setPanel(this.subtitlesPanel);
 
                     this.favoriteSubtitlesPanel = new FavoriteSubtitlesPanel(this.favoriteSubtitlesEl, this.dbFavoriteSubtitlesRef, dbSubtitlesRef);

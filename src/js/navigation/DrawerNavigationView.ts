@@ -1,30 +1,33 @@
 import { INavigationController } from "./NavigationController";
 
-export interface INavigationView {
-    hide(): void;
-    show(): void;
-    toggle(): void;
+import {MDCDrawer} from "@material/drawer";
+import { INavigationView } from "./TopNavigationView";
+
+interface IDrawer {
+    open: boolean;
 }
 
-export class TopNavigationView implements INavigationView {
+export class DrawerNavigationView implements INavigationView {
     private readonly controller: INavigationController;
     private readonly containerEl: HTMLElement;
+    private drawer: IDrawer;
+
     private isOpen = false;
 
     constructor(controllerCreator: (view) => INavigationController) {
-        const container = document.getElementById('top-navigation');
-        if (!container) {
-            throw new Error("'top-navigation' element is required");
-        }
-
+        // material design drawer must have a mdc-drawer class
+        const container = document.querySelector<HTMLElement>(".mdc-drawer");
+        if (!container)  throw new Error(".mdc-drawer element is required");
         this.containerEl = container;
+
+        this.drawer = MDCDrawer.attachTo(this.containerEl);
 
         this.controller = controllerCreator(this);
 
         container.addEventListener("click", e => {
             e.preventDefault();
             const target = e.target as HTMLElement;
-            const navItemEl = target ? target.closest(".nav-item") : undefined;
+            const navItemEl = target ? target.closest(".mdc-list-item") : undefined;
             if (navItemEl) {
                 this.controller.itemClicked(navItemEl.attributes["data-item-name"].value);
             }
@@ -32,13 +35,11 @@ export class TopNavigationView implements INavigationView {
     }
 
     public hide() {
-        this.isOpen = false;
-        this.containerEl.style.display = 'none';
+        this.drawer.open = false;
     }
 
     public show() {
-        this.isOpen = true;
-        this.containerEl.style.display = 'block';
+        this.drawer.open = true;
     }
 
     public toggle() {

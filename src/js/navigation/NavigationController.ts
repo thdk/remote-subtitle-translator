@@ -1,17 +1,17 @@
-import { ITopNavigationView } from "./TopNavigationView";
+import { INavigationView } from "./TopNavigationView";
 import { PanelDashboard } from "../panels/dashboard";
 import { IBroadcaster, IMessage, IListener, PubSubBroadcaster } from "../broadcaster";
 
-export interface ITopNavigationController {
+export interface INavigationController {
     itemClicked: (itemName: string) => void;
 }
 
-export class TopNavigationController implements ITopNavigationController, IListener {
+export class NavigationController implements INavigationController, IListener {
     private readonly panelDashboard: PanelDashboard;
-    private readonly view: ITopNavigationView;
+    private readonly view: INavigationView;
     private readonly broadcaster: IBroadcaster;
 
-    constructor(panelDashboard: PanelDashboard, view: ITopNavigationView){
+    constructor(panelDashboard: PanelDashboard, view: INavigationView){
         this.panelDashboard = panelDashboard;
         this.view = view;
 
