@@ -36,7 +36,7 @@ gulp.task('images', function() {
 gulp.task('scss', function () {
    gulp.src(configuration.paths.src.css)
        .pipe(sass({
-        includePaths: ['node_modules/']
+        includePaths: ['node_modules/'] // added includePaths to resolve scss partials from node modules
       }).on('error', sass.logError))
        .pipe(gulp.dest(configuration.paths.dist + '/css'))
 });

@@ -3,6 +3,8 @@
 
 @import "@material/drawer/mdc-drawer";
 @import "@material/list/mdc-list";
+@import "@material/top-app-bar/mdc-top-app-bar";
+@import "@material/fab/mdc-fab";
 
 body {
     font: 100% $font-stack;
@@ -53,7 +55,6 @@ body {
 
   .subs {
     padding-bottom: 6vh;
-    padding-top: 50px;
 
     .hide-originals {
       .sub.no-translation {
@@ -176,5 +177,18 @@ body {
           color:green;
         }
       }
+    }
+  }
+
+  .app-fab--absolute {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+  }
+
+  @media(min-width: 1024px) {
+     .app-fab--absolute {
+      bottom: 1.5rem;
+      right: 1.5rem;
     }
   }

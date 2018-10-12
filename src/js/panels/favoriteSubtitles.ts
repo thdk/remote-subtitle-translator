@@ -1,11 +1,15 @@
 /// <reference path="panels.ts" />
 
-import { Panel } from "./panels";
-import { ITranslateService, ISubtitle, ISession, IFavoriteSubtitle } from "../lib";
+import { Panel, IPanelDependencies } from "./panels";
+import { ISubtitle, IFavoriteSubtitle } from "../lib";
 import * as authentication from "../lib/authenticator";
 
 import * as firebase from "firebase";
 import "firebase/firestore";
+
+export interface IFavovoriteSubtitlesPanelDependencies extends IPanelDependencies {
+
+}
 
 export class FavoriteSubtitlesPanel extends Panel {
     private readonly dbFavoritesRef: firebase.firestore.CollectionReference;
@@ -16,8 +20,8 @@ export class FavoriteSubtitlesPanel extends Panel {
     // TODO: get rid of JQuery
     private readonly $container: JQuery;
 
-    constructor(container: HTMLElement, dbFavoritesRef: firebase.firestore.CollectionReference, dbSubtitlesRef: firebase.firestore.CollectionReference) {
-        super('favorite-subtitles', container);
+    constructor(container: HTMLElement, deps: IFavovoriteSubtitlesPanelDependencies, dbFavoritesRef: firebase.firestore.CollectionReference, dbSubtitlesRef: firebase.firestore.CollectionReference) {
+        super('favorite-subtitles', container, deps);
 
         this.$container = $(container.querySelector("#favorite-subs-container") as HTMLElement);
 
@@ -51,7 +55,7 @@ export class FavoriteSubtitlesPanel extends Panel {
                 });
             });
         });
-        
+
 
         this.containerEl.addEventListener("click", e => this.deleteIconClickHandler(e));
     }

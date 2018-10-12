@@ -1,11 +1,5 @@
 // TODO: move commented namespaces into their own module
 
-// namespace thdk {
-    export interface IDisposable {
-        dispose:() => void;
-    }
-//}
-
 // namespace thdk.firebase.auth {
     import * as firebase from "firebase";
     import 'firebase/auth';

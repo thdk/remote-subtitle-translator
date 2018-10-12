@@ -1,4 +1,4 @@
-import { IPanel } from "./panels";
+import { IPanel } from "../lib/base/panel";
 
 export class PanelDashboard {
     private readonly panels: Map<string, IPanel>;
@@ -20,6 +20,10 @@ export class PanelDashboard {
             this.openPanel = panel;
         }
 
-        else throw new Error("Can's show panel: '" + name + "', panel does not exist");
+        else throw new Error("Can't show panel: '" + name + "', panel does not exist");
+    }
+
+    public getOpenPanel(): IPanel | undefined {
+        return this.openPanel;
     }
 }

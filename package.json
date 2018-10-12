@@ -36,6 +36,8 @@
   },
   "dependencies": {
     "@material/drawer": "^0.40.1",
+    "@material/fab": "^0.40.1",
+    "@material/top-app-bar": "^0.40.1",
     "@types/jquery": "^3.3.6",
     "@types/pubsub-js": "^1.5.18",
     "firebase": "^5.4.1",

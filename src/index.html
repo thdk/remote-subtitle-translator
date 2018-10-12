@@ -26,6 +26,22 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/pubsub-js/1.6.1/pubsub.min.js"></script>
 	<script src="./js/app.js?1"></script>
 
+	<!--
+		Waiting for bottom-app-bar to be developed for material design web components
+		Temporary using the top-app-bar component.
+	-->
+	<header class="mdc-top-app-bar mdc-top-app-bar--fixed mdc-top-app-bar--dense">
+		<div class="mdc-top-app-bar__row">
+		  <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+			<a href="#" class="material-icons mdc-top-app-bar__navigation-icon rst-top-bar-menu-item">menu</a>
+			<span class="mdc-top-app-bar__title rst-title"></span>
+		  </section>
+		  <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end rst-actions" role="toolbar">
+
+		  </section>
+		</div>
+	  </header>
+
 	<aside class="mdc-drawer mdc-drawer--modal">
 		<div class="mdc-drawer__content">
 			<nav class="mdc-list">
@@ -47,18 +63,6 @@
 
 	<div class="mdc-drawer-scrim"></div>
 
-	<div id="top-navigation">
-		<div class="nav-item" data-item-name="subtitles" title="Subtitle viewer">
-			<span class="subtitles">☲</span>
-		</div>
-		<div class="nav-item" data-item-name="favorite-subtitles" title="Favorite subtitles">
-			<span class="favorites">★</span>
-		</div>
-		<div class="nav-item" data-item-name="settings" title="Settings">
-			<span class="settings">☀</span>
-		</div>
-	</div>
-
 	<div id="subtitle-player" class="panel" style="display: none;">
 		<div class="hidescrollbar-wrapper subs-wrapper">
 			<div class="subs hidescrollbar">
@@ -66,7 +70,10 @@
 				<div class="clear"></div>
 			</div>
 		</div>
-		<div id="toolbar">
+		<button class="mdc-fab app-fab--absolute rst-toggleplayback" aria-label="Favorite">
+			<span class="mdc-fab__icon material-icons">play_arrow</span>
+		  </button>
+		<div id="toolbar" style="display: none;">
 			<ul>
 				<li class="float-left">
 					<a href="#" class="toggleDrawer">

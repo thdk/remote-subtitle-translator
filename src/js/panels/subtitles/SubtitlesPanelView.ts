@@ -1,35 +1,38 @@
 import { ISubtitlesPanelController } from "./SubtitlesPanelController";
-import { Panel } from "../panels";
+import { IPanelDependencies, PanelWithActions } from "../panels";
 import { ISubtitle } from "../../lib";
+import { IPannelView } from "../../lib/base/panel";
 
-export interface ISubtitlesPanelView {
+import {MDCRipple} from '@material/ripple';
+import { requireEl } from "../../lib/utils";
+
+export interface ISubtitlesPanelView extends IPannelView {
     toolbarSetActiveRealTimeButton(isRealtime: boolean);
     toolbarSetActiveHideOriginalsButton(hideOriginals: boolean);
-    setSingleViewMode(singleView);
+    setSingleViewMode();
     toolbarToggleHideOriginalsButton(view: boolean);
     setActiveHideOriginals(hideOriginals: boolean);
     addSubtitleToDom(sub: ISubtitle): void;
     updateSubtitleInDom(oldSub: ISubtitle, newSub: ISubtitle);
 }
 
-export interface ISubtitlesPanelViewDependencies {
+export interface ISubtitlesPanelViewDependencies extends IPanelDependencies {
     toggleDrawer: () => void;
 }
 
-export class SubtitlesPanelView extends Panel {
+export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPanelView {
     private readonly controller: ISubtitlesPanelController;
 
     private readonly $container: JQuery;
     private readonly $toolbar: JQuery;
     private readonly toolbarRealtimeButtonEl: HTMLElement;
     private readonly toolbarHideOriginalsButtonEl: HTMLElement;
-    private readonly toolbarToggleSingleViewButtonEl: HTMLElement;
-    private readonly toolbarToggleDrawerButtonel: HTMLElement;
-    private readonly subs: {[id: string]: HTMLElement} = {};
+    private readonly playbackButtonEl: HTMLElement;
+    private readonly subs: { [id: string]: HTMLElement } = {};
     private readonly toolbarToggleDrawer: () => void;
 
     constructor(container: HTMLElement, controllerCreator: (view: ISubtitlesPanelView) => ISubtitlesPanelController, deps: ISubtitlesPanelViewDependencies) {
-        super("subtitles", container);
+        super("subtitles", container, deps);
 
         this.toolbarToggleDrawer = deps.toggleDrawer;
 
@@ -41,14 +44,33 @@ export class SubtitlesPanelView extends Panel {
         this.$toolbar = $(this.containerEl.querySelector("#toolbar") as HTMLElement);
         this.toolbarRealtimeButtonEl = this.$toolbar.find(".toggleRealtime")[0];
         this.toolbarHideOriginalsButtonEl = this.$toolbar.find(".hideOriginals")[0];
-        this.toolbarToggleSingleViewButtonEl = this.$toolbar.find(".toggleSingleView")[0];
-        this.toolbarToggleDrawerButtonel = this.$toolbar.find(".toggleDrawer")[0];
+        this.playbackButtonEl = requireEl(".rst-toggleplayback", this.containerEl);
 
         this.controller = controllerCreator(this);
+
+        this.actions = [
+            {
+                icon: "all_inclusive",
+                text: "Realtime",
+                action: () => this.controller.toggleRealtimeTranslation()
+            },
+            {
+                icon: "unfold_less",
+                text: "English only",
+                action: () => this.controller.toggleHideOriginals()
+            },
+            {
+                icon: "fullscreen",
+                text: "Fullscreen",
+                action: () => this.controller.toggleSingleView()
+            }
+        ];
     }
 
     protected init() {
         super.init();
+
+        const fabRipple = new MDCRipple(document.querySelector('.mdc-fab'));
 
         if (!this.containerEl || !this.$toolbar)
             return;
@@ -91,16 +113,20 @@ export class SubtitlesPanelView extends Panel {
 
         this.$toolbar.on("click.rst touch.rst", ".toggleSingleView", e => {
             e.preventDefault();
-            this.controller.toggleSingleView(!document.querySelector("body")!.classList.contains("single-view"));
+            this.controller.toggleSingleView();
         });
 
         this.$toolbar.on("click.rst, touch.rst", ".toggleDrawer", e => {
             e.preventDefault();
             this.toolbarToggleDrawer();
         });
+
+        this.playbackButtonEl.addEventListener("click", (e) => {
+            this.controller.togglePlayback();
+        })
     }
 
-    protected deinit() {
+    public dispose() {
         this.controller.dispose();
 
         this.$container.off(".rst");
@@ -129,9 +155,9 @@ export class SubtitlesPanelView extends Panel {
         this.toolbarHideOriginalsButtonEl.classList.toggle("active", hideOriginals);
     }
 
-    public setSingleViewMode(singleView) {
-        document.querySelector("body")!.classList.toggle("single-view", singleView);
-        if (!singleView) this.scrollDown();
+    public setSingleViewMode() {
+        document.querySelector("body")!.classList.toggle("single-view");
+        if (!document.querySelector("body")!.classList.contains("single-view")) this.scrollDown();
     }
 
     public toolbarToggleHideOriginalsButton(view: boolean) {
@@ -155,7 +181,7 @@ export class SubtitlesPanelView extends Panel {
 
         if (sub.isMulti) {
             // TODO: optimize removal of multi class
-            this.$container.find(".sub.multi:not([data-subtime='" + sub.time +"'])").removeClass("multi");
+            this.$container.find(".sub.multi:not([data-subtime='" + sub.time + "'])").removeClass("multi");
             $template.addClass("multi");
         }
 

@@ -1,13 +1,13 @@
-import { IBroadcaster, IMessage, PubSubBroadcaster } from '../broadcaster';
+import { IPanel } from "../lib/base/panel";
+import { IAppBarAction } from "../appbar/AppBarView";
+import { IBroadcaster } from "../lib/interfaces";
 
-export interface IPanel {
-    readonly containerEl: HTMLElement;
-    readonly name: string;
-    openAsync(): Promise<void>;
-    close();
+export interface IPanelDependencies {
+    broadcaster: IBroadcaster;
 }
 
 export class Panel implements IPanel {
+    readonly actions: IAppBarAction[] | undefined = undefined;
     public readonly containerEl: HTMLElement;
     private readonly closeEl?: HTMLElement;
 
@@ -15,9 +15,9 @@ export class Panel implements IPanel {
     public readonly name: string;
     private isOpen = false;
 
-    constructor(name: string, container: HTMLElement) {
+    constructor(name: string, container: HTMLElement, deps: IPanelDependencies) {
         this.containerEl = container;
-        this.bc = new PubSubBroadcaster();
+        this.bc = deps.broadcaster;
         this.name = name;
 
         this.closeEl = this.containerEl.querySelector("#panelCloseIcon") as HTMLElement;
@@ -59,12 +59,14 @@ export class Panel implements IPanel {
     }
 
     onCloseClicked = (event: MouseEvent): void => {
-        console.log("close icon clicked");
         this.close();
     }
 }
 
-export interface IPanelMessage extends IMessage {
-    action: "show" | "close",
-    panelName: string
+export class PanelWithActions extends Panel {
+    public actions: IAppBarAction[] | undefined;
+}
+
+export const isPanelWithActions = (panel: IPanel): panel is PanelWithActions => {
+    return panel instanceof PanelWithActions;
 }

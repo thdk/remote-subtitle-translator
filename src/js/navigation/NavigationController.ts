@@ -1,35 +1,45 @@
 import { INavigationView } from "./TopNavigationView";
-import { PanelDashboard } from "../panels/dashboard";
-import { IBroadcaster, IMessage, IListener, PubSubBroadcaster } from "../broadcaster";
+import { AnyMessage } from "../messages";
+import { IPannelController } from "../lib/base/panel";
+import { IDisposable, IBroadcaster, IListener, IController } from "../lib/interfaces";
 
-export interface INavigationController {
+export interface INavigationController extends IPannelController {
     itemClicked: (itemName: string) => void;
 }
 
-export class NavigationController implements INavigationController, IListener {
-    private readonly panelDashboard: PanelDashboard;
+export interface INavigationControllerDependencies {
+    broadcaster: IBroadcaster;
+    navigate: (destination: string) => void;
+}
+
+export class NavigationController implements IController {
     private readonly view: INavigationView;
-    private readonly broadcaster: IBroadcaster;
+    private readonly navigate: INavigationControllerDependencies["navigate"];
+    private readonly broadcaster: INavigationControllerDependencies["broadcaster"];
 
-    constructor(panelDashboard: PanelDashboard, view: INavigationView){
-        this.panelDashboard = panelDashboard;
+    constructor(view: INavigationView, deps: INavigationControllerDependencies){
+        const {navigate, broadcaster} = deps;
+        this.navigate = navigate;
+        this.broadcaster = broadcaster;
+        this.subscribe();
         this.view = view;
-
-        this.broadcaster = new PubSubBroadcaster();
-        this.broadcaster.subscribe(this);
     }
 
     public itemClicked(itemName: string) {
-        this.panelDashboard.showPanel(itemName);
+        this.navigate(itemName);
     }
 
-    public onMessage(message: IMessage) {
-        if (message.type === "loggedIn") {
-            this.view.show();
-        }
-
-        if (message.type === "loggedOut") {
+    public onMessage(message: AnyMessage) {
+        if (message.type === "panel" && message.payload.action === "show") {
             this.view.hide();
         }
+    }
+
+    public subscribe() {
+        this.broadcaster.subscribe(this);
+    }
+
+    public dispose() {
+        this.broadcaster.unsubscribe(this);
     }
 }

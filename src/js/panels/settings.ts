@@ -1,13 +1,17 @@
 /// <reference path="panels.ts" />
 
-import { Panel } from "./panels";
+import { Panel, IPanelDependencies } from "./panels";
+
+export interface ISettingsPanelDependencies extends IPanelDependencies {
+
+}
 
 export class SettingsPanel extends Panel {
     private firebaseApp: firebase.app.App;
     private loggedInEls: NodeListOf<Element>;
 
-    constructor(container: HTMLElement, firebaseApp: any) {
-        super('settings', container);
+    constructor(container: HTMLElement, deps: ISettingsPanelDependencies, firebaseApp: any) {
+        super('settings', container, deps);
         this.firebaseApp = firebaseApp;
 
         this.loggedInEls = this.containerEl.getElementsByClassName('logged-in');

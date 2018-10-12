@@ -1,10 +1,10 @@
 /// <reference path="panels.ts"/>
 
-import { Panel } from "./panels";
+import { Panel, IPanelDependencies } from "./panels";
 declare var firebase;
 declare var firebaseui;
 
-interface IAuthenticatorDependencies {
+interface IAuthenticatorDependencies extends IPanelDependencies{
     firebaseApp: any;
 }
 
@@ -14,7 +14,7 @@ export class AuthenticationPanel extends Panel {
     private firebaseUI: any;
 
     constructor(deps: IAuthenticatorDependencies, containerEl: HTMLElement) {
-        super("authentication", containerEl);
+        super("authentication", containerEl, deps);
         this.firebaseApp = deps.firebaseApp;
         this.firebaseUI = new firebaseui.auth.AuthUI(this.firebaseApp.auth());
     }

@@ -1,20 +1,21 @@
 import { ISubtitlesPanelView } from "./SubtitlesPanelView";
-import { PanelDashboard } from "../../panels/dashboard";
-import { IBroadcaster, IMessage, IListener, PubSubBroadcaster } from "../../broadcaster";
-import { ITranslateService, ISession, IDisposable, ISubtitle, getCurrentUserAsync } from "../../lib";
+import { ITranslateService, ISession, ISubtitle, getCurrentUserAsync } from "../../lib";
+import { IDisposable } from "../../lib/interfaces";
 
 import * as firebase from "firebase";
 import "firebase/firestore";
 import "firebase/auth";
+import { PanelController } from "../../lib/base/panel";
+import { IPanelDependencies } from "../panels";
 
 export interface ISubtitlesPanelController extends IDisposable  {
     togglePlayback: () => void;
     translate(subId: string, text: string);
     toggleSubtitleInFavorites(subId: string);
-    toggleRealtimeTranslation();
-    toggleHideOriginals();
-    toggleSingleView(singleView: boolean);
-    shouldHideOriginals();
+    toggleRealtimeTranslation(): void;
+    toggleHideOriginals(): void;
+    toggleSingleView(): void;
+    shouldHideOriginals(): boolean;
     subscribe();
 }
 
@@ -23,9 +24,8 @@ type PlayerSettings = {
     hideOriginals: boolean;
 }
 
-export class SubtitlesPanelController implements ISubtitlesPanelController, IListener {
-    private readonly view: ISubtitlesPanelView;
-    private readonly broadcaster: IBroadcaster;
+export class SubtitlesPanelController extends PanelController implements ISubtitlesPanelController {
+    protected readonly view: ISubtitlesPanelView;
 
     private settings: PlayerSettings;
 
@@ -40,11 +40,10 @@ export class SubtitlesPanelController implements ISubtitlesPanelController, ILis
 
     private firestoreUnsubscribe?: () => void;
 
-    constructor(view: ISubtitlesPanelView, dbSubtitlesRef: firebase.firestore.CollectionReference, dbFavoritesRef: firebase.firestore.CollectionReference, dbSessionsRef: firebase.firestore.CollectionReference, session: ISession, translateService: ITranslateService){
-        this.view = view;
+    constructor(view: ISubtitlesPanelView, deps: IPanelDependencies, dbSubtitlesRef: firebase.firestore.CollectionReference, dbFavoritesRef: firebase.firestore.CollectionReference, dbSessionsRef: firebase.firestore.CollectionReference, session: ISession, translateService: ITranslateService){
+        super(view, deps);
 
-        this.broadcaster = new PubSubBroadcaster();
-        this.broadcaster.subscribe(this);
+        this.view = view;
 
         this.settings = {
             realtimeTranslation: false,
@@ -63,10 +62,6 @@ export class SubtitlesPanelController implements ISubtitlesPanelController, ILis
 
     }
 
-    public onMessage(message: IMessage) {
-
-    }
-
     public togglePlayback() {
         if (!this.dbSessionsRef) return;
 
@@ -76,7 +71,7 @@ export class SubtitlesPanelController implements ISubtitlesPanelController, ILis
     }
 
     public subscribe() {
-        // move to controller
+        super.subscribe();
         this.firestoreUnsubscribe = this.dbSubtitlesRef.orderBy("created")
             .onSnapshot(snapshot => {
                 snapshot.docChanges().forEach(change => {
@@ -111,6 +106,7 @@ export class SubtitlesPanelController implements ISubtitlesPanelController, ILis
 
     public dispose() {
         if (this.firestoreUnsubscribe) this.firestoreUnsubscribe();
+        super.dispose();
     }
 
     public translate(subId: string, text: string) {
@@ -176,8 +172,8 @@ export class SubtitlesPanelController implements ISubtitlesPanelController, ILis
         this.settingsSetHideOriginals(!this.settings.hideOriginals);
     }
 
-    public toggleSingleView(singleView: boolean) {
-        this.view.setSingleViewMode(singleView);
+    public toggleSingleView() {
+        this.view.setSingleViewMode();
     }
 
     public shouldHideOriginals() {
