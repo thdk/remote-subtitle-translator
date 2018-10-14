@@ -1,10 +1,11 @@
 @import '_vars';
-@import '_topnavigation.scss';
+@import './panels/panel';
 
 @import "@material/drawer/mdc-drawer";
 @import "@material/list/mdc-list";
 @import "@material/top-app-bar/mdc-top-app-bar";
 @import "@material/fab/mdc-fab";
+@import "@material/icon-button/mdc-icon-button";
 
 body {
     font: 100% $font-stack;

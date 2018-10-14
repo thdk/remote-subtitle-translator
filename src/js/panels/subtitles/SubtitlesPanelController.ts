@@ -182,7 +182,7 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
 
     private settingsSetRealtimeTranslation(realtime: boolean) {
         this.settings.realtimeTranslation = realtime;
-        this.view.toolbarSetActiveRealTimeButton(realtime);
+        this.view.setActiveRealTimeButton(realtime);
         this.view.toolbarToggleHideOriginalsButton(realtime);
 
         if (!this.settings.realtimeTranslation) {

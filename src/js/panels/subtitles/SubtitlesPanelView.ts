@@ -7,8 +7,8 @@ import {MDCRipple} from '@material/ripple';
 import { requireEl } from "../../lib/utils";
 
 export interface ISubtitlesPanelView extends IPannelView {
-    toolbarSetActiveRealTimeButton(isRealtime: boolean);
-    toolbarSetActiveHideOriginalsButton(hideOriginals: boolean);
+    setActiveRealTimeButton(isRealtime: boolean);
+    setActiveHideOriginalsButton(hideOriginals: boolean);
     setSingleViewMode();
     toolbarToggleHideOriginalsButton(view: boolean);
     setActiveHideOriginals(hideOriginals: boolean);
@@ -24,9 +24,6 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
     private readonly controller: ISubtitlesPanelController;
 
     private readonly $container: JQuery;
-    private readonly $toolbar: JQuery;
-    private readonly toolbarRealtimeButtonEl: HTMLElement;
-    private readonly toolbarHideOriginalsButtonEl: HTMLElement;
     private readonly playbackButtonEl: HTMLElement;
     private readonly subs: { [id: string]: HTMLElement } = {};
     private readonly toolbarToggleDrawer: () => void;
@@ -41,21 +38,21 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
 
         // todo: get rid of JQuery
         this.$container = $(subsPlaceholderEl as HTMLElement);
-        this.$toolbar = $(this.containerEl.querySelector("#toolbar") as HTMLElement);
-        this.toolbarRealtimeButtonEl = this.$toolbar.find(".toggleRealtime")[0];
-        this.toolbarHideOriginalsButtonEl = this.$toolbar.find(".hideOriginals")[0];
         this.playbackButtonEl = requireEl(".rst-toggleplayback", this.containerEl);
 
         this.controller = controllerCreator(this);
 
+        // TODO: move to controller?
         this.actions = [
             {
-                icon: "all_inclusive",
+                iconActive: "cloud",
+                icon: "cloud_off",
                 text: "Realtime",
                 action: () => this.controller.toggleRealtimeTranslation()
             },
             {
-                icon: "unfold_less",
+                iconActive: "unfold_less",
+                icon: "unfold_more",
                 text: "English only",
                 action: () => this.controller.toggleHideOriginals()
             },
@@ -70,9 +67,9 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
     protected init() {
         super.init();
 
-        const fabRipple = new MDCRipple(document.querySelector('.mdc-fab'));
+        // const fabRipple = new MDCRipple(document.querySelector('.mdc-fab'));
 
-        if (!this.containerEl || !this.$toolbar)
+        if (!this.containerEl)
             return;
 
         this.$container.on("click.rst", ".sub:not(.has-translation)", e => {
@@ -96,31 +93,6 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
             this.controller.toggleSubtitleInFavorites(subId);
         });
 
-        this.$toolbar.on("click.rst touch.rst", ".toggleplayback", e => {
-            e.preventDefault();
-            this.controller.togglePlayback();
-        });
-
-        this.$toolbar.on("click.rst touch.rst", ".toggleRealtime", e => {
-            e.preventDefault();
-            this.controller.toggleRealtimeTranslation();
-        });
-
-        this.$toolbar.on("click.rst touch.rst", ".hideOriginals", e => {
-            e.preventDefault();
-            this.controller.toggleHideOriginals();
-        });
-
-        this.$toolbar.on("click.rst touch.rst", ".toggleSingleView", e => {
-            e.preventDefault();
-            this.controller.toggleSingleView();
-        });
-
-        this.$toolbar.on("click.rst, touch.rst", ".toggleDrawer", e => {
-            e.preventDefault();
-            this.toolbarToggleDrawer();
-        });
-
         this.playbackButtonEl.addEventListener("click", (e) => {
             this.controller.togglePlayback();
         })
@@ -130,7 +102,6 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
         this.controller.dispose();
 
         this.$container.off(".rst");
-        this.$toolbar.off(".rst");
         super.deinit();
     }
 
@@ -147,12 +118,12 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
         this.$container.empty();
     }
 
-    public toolbarSetActiveRealTimeButton(isRealtime: boolean) {
-        this.toolbarRealtimeButtonEl.classList.toggle("active", isRealtime);
+    public setActiveRealTimeButton(isRealtime: boolean) {
+        // TODO: implement this
     }
 
-    public toolbarSetActiveHideOriginalsButton(hideOriginals: boolean) {
-        this.toolbarHideOriginalsButtonEl.classList.toggle("active", hideOriginals);
+    public setActiveHideOriginalsButton(hideOriginals: boolean) {
+        // TODO: implement this
     }
 
     public setSingleViewMode() {
@@ -161,11 +132,11 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
     }
 
     public toolbarToggleHideOriginalsButton(view: boolean) {
-        this.toolbarHideOriginalsButtonEl.style.display = view ? "block" : "none";
+        // TODO: implement this
     }
 
     public setActiveHideOriginals(hideOriginals: boolean) {
-        this.toolbarSetActiveHideOriginalsButton(hideOriginals);
+        this.setActiveHideOriginalsButton(hideOriginals);
         this.$container.toggleClass("hide-originals", hideOriginals);
     }
 
@@ -224,7 +195,7 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
     }
 
     private canScrollDown(): boolean {
-        return window.innerHeight + window.scrollY >= document.body.offsetHeight;
+        return window.innerHeight + window.scrollY >= document.body.offsetHeight - 200;
     }
 
     private getSubtitleTemplate(sub: ISubtitle): string {
@@ -252,11 +223,6 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
     }
 
     private scrollDown() {
-        if (!this.$toolbar)
-            return;
-
-        $('html, body').animate({
-            scrollTop: this.$toolbar.offset()!.top + 100
-        }, 0);
+        window.scrollTo(0,document.body.scrollHeight);
     }
 }
