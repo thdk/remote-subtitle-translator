@@ -25,6 +25,7 @@ import { IBroadcaster } from './lib/interfaces';
 export class RemoteSubtitleReceiver {
     private firestore?: firebase.firestore.Firestore;
     private dbSessionsRef?: firebase.firestore.CollectionReference;
+    private dbSubtitlesRef?: firebase.firestore.CollectionReference;
     private dbFavoriteSubtitlesRef?: firebase.firestore.CollectionReference;
 
     private readonly panelDashboard: PanelDashboard;
@@ -104,6 +105,7 @@ export class RemoteSubtitleReceiver {
         if (this.authenticator) this.authenticator.close();
 
         if (!this.dbSessionsRef) throw new Error("dbSessionRef is undefined");
+        if (!this.dbSubtitlesRef) throw new Error("dbSubtitlesRef is undefined");
 
         return this.dbSessionsRef.where("uid", "==", uid).orderBy("created", "desc").limit(1)
             .get()
@@ -114,15 +116,13 @@ export class RemoteSubtitleReceiver {
                     session = Object.assign({ id: sessionSnapshot.id }, sessionSnapshot.data());
                 }
                 if (session) {
-                    const dbSubtitlesRef = this.dbSessionsRef!.doc(session!.id).collection("subtitles");
-
                     if (!this.dbFavoriteSubtitlesRef) throw new Error("this.dbFavoriteSubtitlesRef is undefined");
                     const { broadcaster } = this;
-                    const controllerCreator = (view) => new SubtitlesPanelController(view, { broadcaster }, dbSubtitlesRef, this.dbFavoriteSubtitlesRef!, this.dbSessionsRef!, session!, this.translateService);
+                    const controllerCreator = (view) => new SubtitlesPanelController(view, { broadcaster }, this.dbSubtitlesRef!, this.dbFavoriteSubtitlesRef!, this.dbSessionsRef!, session!, this.translateService);
                     this.subtitlesPanel = new SubtitlesPanelView(this.subtitlePlayerEl, controllerCreator, { toggleDrawer: () => this.navigation.toggle(), broadcaster: this.broadcaster });
                     this.panelDashboard.setPanel(this.subtitlesPanel);
 
-                    this.favoriteSubtitlesPanel = new FavoriteSubtitlesPanel(this.favoriteSubtitlesEl, { broadcaster }, this.dbFavoriteSubtitlesRef, dbSubtitlesRef);
+                    this.favoriteSubtitlesPanel = new FavoriteSubtitlesPanel(this.favoriteSubtitlesEl, { broadcaster }, this.dbFavoriteSubtitlesRef, this.dbSubtitlesRef!);
                     this.panelDashboard.setPanel(this.favoriteSubtitlesPanel);
 
                     this.panelDashboard.showPanel(this.subtitlesPanel.name);
@@ -156,6 +156,7 @@ export class RemoteSubtitleReceiver {
         const settings = { timestampsInSnapshots: true };
         this.firestore.settings(settings);
 
+        this.dbSubtitlesRef = this.firestore.collection("subtitles");
         this.dbSessionsRef = this.firestore.collection("sessions");
         this.dbFavoriteSubtitlesRef = this.firestore.collection("favorites");
     }

@@ -31,7 +31,7 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
 
     private readonly translateService: ITranslateService;
     private readonly dbSubtitlesRef: firebase.firestore.CollectionReference;
-    private readonly session?: ISession;
+    private readonly session: ISession;
 
     private readonly dbFavoritesRef: firebase.firestore.CollectionReference;
     private readonly dbSessionsRef: firebase.firestore.CollectionReference;
@@ -65,14 +65,16 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
     public togglePlayback() {
         if (!this.dbSessionsRef) return;
 
-            this.dbSessionsRef.doc(this.session!.id).update({ isWatching: !this.session!.isWatching }).then(() => {
-                this.session!.isWatching = !this.session!.isWatching;
+            this.dbSessionsRef.doc(this.session.id).update({ isWatching: !this.session.isWatching }).then(() => {
+                this.session.isWatching = !this.session.isWatching;
             });
     }
 
     public subscribe() {
         super.subscribe();
-        this.firestoreUnsubscribe = this.dbSubtitlesRef.orderBy("created")
+        console.log(this.session.id);
+        this.firestoreUnsubscribe = this.dbSubtitlesRef
+            .where("sessionId", "==", this.session.id)
             .onSnapshot(snapshot => {
                 snapshot.docChanges().forEach(change => {
                     const subtitle = Object.assign(change.doc.data(), { id: change.doc.id }) as ISubtitle;
