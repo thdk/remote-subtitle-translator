@@ -1,5 +1,5 @@
 import * as pubsub from 'pubsub-js'
-import { IListener, IBroadcaster } from './interfaces';
+import { IListener, IBroadcaster, IMessage } from './interfaces';
 
 export class PubSubBroadcaster implements IBroadcaster {
     private readonly topic: string;
@@ -9,7 +9,7 @@ export class PubSubBroadcaster implements IBroadcaster {
         this.subscriptions = new Map();
     }
 
-    public postMessage(type: string, data: any) {
+    public postMessage<T extends IMessage>(type: T["type"], data: T["payload"]) {
         pubsub.publish(this.topic, Object.assign({ type }, data));
     }
 

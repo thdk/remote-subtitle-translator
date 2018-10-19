@@ -18,7 +18,7 @@ export interface IPanelMessage extends IMessage {
 export interface IPannelController extends IController {
 }
 
-export interface IPannelView extends IDisposable {
+export interface IPannelView extends IPanel, IDisposable {
 }
 
 export interface IPanelControllerDependencies {

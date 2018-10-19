@@ -14,7 +14,7 @@ export interface IListener {
 
 export interface IBroadcaster extends IDisposable{
     onMessage?: (message: IMessage) => void;
-    postMessage(type: string, data: any);
+    postMessage<T extends IMessage>(type: T["type"], data: T["payload"])
     subscribe(listner: IListener);
     unsubscribe(listener: IListener);
 }

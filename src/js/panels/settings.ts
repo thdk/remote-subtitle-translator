@@ -1,54 +1,37 @@
 /// <reference path="panels.ts" />
 
 import { Panel, IPanelDependencies } from "./panels";
+import { requireEl, requireEls } from "../lib/utils";
+
+import * as auth from "../lib/authenticator";
 
 export interface ISettingsPanelDependencies extends IPanelDependencies {
-
 }
 
 export class SettingsPanel extends Panel {
-    private firebaseApp: firebase.app.App;
-    private loggedInEls: NodeListOf<Element>;
+    private loggedInEls: HTMLElement[];
 
-    constructor(container: HTMLElement, deps: ISettingsPanelDependencies, firebaseApp: any) {
+    constructor(container: HTMLElement, deps: ISettingsPanelDependencies) {
         super('settings', container, deps);
-        this.firebaseApp = firebaseApp;
-
-        this.loggedInEls = this.containerEl.getElementsByClassName('logged-in');
+        this.loggedInEls = requireEls(".logged-in");
     }
 
     protected init() {
         super.init();
-        const logoutButton = this.containerEl.querySelector("#settingsLogoutButton");
-        if (logoutButton) {
-            logoutButton.addEventListener("click", e => {
-                this.firebaseApp.auth().signOut();
-            });
-        }
+        requireEl("#settingsLogoutButton")
+            .addEventListener("click", () => auth.logout());
     }
 
     public openAsync() {
-        return new Promise<void>((resolve, reject) => {
-            const user = this.firebaseApp.auth().currentUser;
-            if (user) {
-                this.containerEl.getElementsByClassName('logged-in username')
-                    .item(0)
-                    .getElementsByTagName('span')
-                    .item(0)
-                    .textContent = user.displayName + "(" + user.email +")";
+        return auth.getLoggedInUserAsync().then(user => {
+            requireEl('.logged-in.username span')
+                .textContent = user.displayName + "(" + user.email + ")";
 
-                // display all elements for logged in users
-                for (let index = 0; index < this.loggedInEls.length; index++) {
-                    (this.loggedInEls[index] as HTMLElement).style.display = 'block';
-                }
-
-                this.init();
-                super.openAsync();
-                resolve();
-            }
-            else {
-                reject("Not authenticated");
-            }
-        });
+            // display all elements for logged in users
+            this.loggedInEls.forEach(el => {
+                el.style.display = 'block';
+            });
+        })
+        .then(() => super.openAsync());
     }
 }

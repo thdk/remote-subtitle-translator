@@ -14,3 +14,13 @@ export const requireEl = <T extends Element = HTMLElement>(selector: string, con
 
     return el;
 };
+
+export const requireEls = <T extends Element = HTMLElement>(selector: string, container?: HTMLElement) => {
+    let els: T[] | null;
+    if (container) els = Array.from(container.querySelectorAll<T>(selector));
+    else els = Array.from(document.querySelectorAll<T>(selector));
+
+    if (!els.length) throw Error("Elements are required: " + selector);
+
+    return els;
+}

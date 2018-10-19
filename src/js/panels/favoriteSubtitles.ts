@@ -8,7 +8,7 @@ import * as firebase from "firebase";
 import "firebase/firestore";
 
 export interface IFavovoriteSubtitlesPanelDependencies extends IPanelDependencies {
-
+    firestore: firebase.firestore.Firestore;
 }
 
 export class FavoriteSubtitlesPanel extends Panel {
@@ -20,7 +20,7 @@ export class FavoriteSubtitlesPanel extends Panel {
     // TODO: get rid of JQuery
     private readonly $container: JQuery;
 
-    constructor(container: HTMLElement, deps: IFavovoriteSubtitlesPanelDependencies, dbFavoritesRef: firebase.firestore.CollectionReference, dbSubtitlesRef: firebase.firestore.CollectionReference) {
+    constructor(container: HTMLElement, deps: IFavovoriteSubtitlesPanelDependencies) {
         super('favorite-subtitles', container, deps);
 
         this.$container = $(container.querySelector("#favorite-subs-container") as HTMLElement);
@@ -28,8 +28,8 @@ export class FavoriteSubtitlesPanel extends Panel {
         const subsPlaceholderEl = this.containerEl.querySelector(".subs");
         if (!subsPlaceholderEl) throw new Error("Favorite Subtitle panel must have a placeholder element for subs");
 
-        this.dbFavoritesRef = dbFavoritesRef;
-        this.dbSubtitlesRef = dbSubtitlesRef;
+        this.dbSubtitlesRef = deps.firestore.collection("subtitles");
+        this.dbFavoritesRef = deps.firestore.collection("favorites");
     }
 
     protected init() {

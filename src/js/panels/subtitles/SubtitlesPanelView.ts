@@ -107,6 +107,7 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
 
     public openAsync() {
         this.controller.subscribe();
+        this.controller.requestSubtitles();
         return super.openAsync();
     }
 
