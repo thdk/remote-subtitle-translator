@@ -98,11 +98,15 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
         })
     }
 
+    public deinit() {
+        this.$container.off(".rst");
+
+        this.dispose();
+        super.deinit();
+    }
+
     public dispose() {
         this.controller.dispose();
-
-        this.$container.off(".rst");
-        super.deinit();
     }
 
     public openAsync() {
@@ -113,10 +117,6 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
 
     public close() {
         super.close();
-        // remove all subtitles from DOM
-        // TODO: do not remove subs from dom on close
-        // we should reopen and only fetch newer subs since last close
-        this.$container.empty();
     }
 
     public setActiveRealTimeButton(isRealtime: boolean) {

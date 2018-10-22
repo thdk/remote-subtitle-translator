@@ -8,6 +8,8 @@ import "firebase/auth";
 import { PanelController } from "../../lib/base/panel";
 import { IPanelDependencies } from "../panels";
 import { getLoggedInUserAsync } from "../../lib/authenticator";
+import { stringify } from "querystring";
+import { getLastValueInMap } from "../../lib/utils";
 
 export interface ISubtitlesPanelController extends IController {
     togglePlayback: () => void;
@@ -42,7 +44,7 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
     private readonly dbFavoritesRef: firebase.firestore.CollectionReference;
     private readonly dbSessionsRef: firebase.firestore.CollectionReference;
 
-    private readonly subs: { [id: string]: ISubtitle } = {};
+    private readonly subs: Map<string, ISubtitle>
 
     private firestoreUnsubscribe?: () => void;
 
@@ -50,6 +52,7 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
         super(view, deps);
 
         this.view = view;
+        this.subs = new Map<string, ISubtitle>();
 
         this.settings = {
             realtimeTranslation: false,
@@ -81,13 +84,16 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
             // unsubscribe from previous firestore queries
             if (this.firestoreUnsubscribe) this.firestoreUnsubscribe();
 
+            const lastSubtitleReceived = getLastValueInMap(this.subs);
             this.firestoreUnsubscribe = this.dbSubtitlesRef
                 .where("sessionId", "==", session.id)
+                .orderBy("created", "asc")
+                .startAfter(lastSubtitleReceived ? lastSubtitleReceived.created : 0)
                 .onSnapshot(snapshot => {
                     snapshot.docChanges().forEach(change => {
                         const subtitle = Object.assign(change.doc.data(), { id: change.doc.id }) as ISubtitle;
                         if (change.type === "added") {
-                            this.subs[subtitle.id] = subtitle;
+                            this.subs.set(subtitle.id, subtitle);
                             this.view.addSubtitleToDom(subtitle);
 
                             if (!subtitle.translation && this.settings.realtimeTranslation) {
@@ -95,10 +101,10 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
                             }
                         }
                         if (change.type === "modified") {
-                            const oldSub = { ...this.subs[subtitle.id] };
+                            const oldSub = this.subs.get(subtitle.id);
                             if (oldSub) {
                                 const newSub = { ...oldSub, ...subtitle };
-                                this.subs[subtitle.id] = newSub;
+                                this.subs.set(subtitle.id, newSub);
                                 this.view.updateSubtitleInDom(oldSub, newSub);
                                 if (oldSub.translation || (!subtitle.translation && this.settings.realtimeTranslation)) {
                                     this.translate(subtitle.id, subtitle.subtitle);

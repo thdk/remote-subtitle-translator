@@ -18,7 +18,7 @@ export class PubSubBroadcaster implements IBroadcaster {
             listener.onMessage({ type: data.type, payload: data });
         });
 
-        this.subscriptions.set(listener, unsubscribe);
+        this.subscriptions.set(listener, () => unsubscribe());
     }
 
     public unsubscribe(listener: IListener) {

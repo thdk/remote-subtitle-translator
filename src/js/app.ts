@@ -68,7 +68,7 @@ export class RemoteSubtitleReceiver implements IDisposable, IListener {
         const favoriteSubtitlesPanel = new FavoriteSubtitlesPanel(requireEl("#favorite-subtitles"), { broadcaster, firestore });
         this.panelDashboard.setPanel(favoriteSubtitlesPanel);
 
-        const settingsPanel = new SettingsPanel(requireEl("#settings"), { broadcaster }, this.firebaseApp.auth());
+        const settingsPanel = new SettingsPanel(requireEl("#settings"), { broadcaster });
         this.panelDashboard.setPanel(settingsPanel);
 
         this.authenticationPanel = new AuthenticationPanel({ authenticator, broadcaster }, requireEl("#authentication"));

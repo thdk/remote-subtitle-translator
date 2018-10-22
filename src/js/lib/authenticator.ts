@@ -46,10 +46,12 @@ export class Authenticator implements IAuthenticator {
     }
 
     public watchAuthenticatedUser() {
-        getLoggedInUserAsync().then(user => {
-            this.authenticatedhandler(user);
-        })
-        .then(() => this.unsubscribeWatchAuthenticatedUser = this.auth.onAuthStateChanged(this.authenticatedhandler.bind(this)));
+        // getLoggedInUserAsync().then(user => {
+        //     this.authenticatedhandler(user);
+        // })
+        // .then(() => this.unsubscribeWatchAuthenticatedUser = this.auth.onAuthStateChanged(this.authenticatedhandler.bind(this)));
+
+        this.unsubscribeWatchAuthenticatedUser = this.auth.onAuthStateChanged(this.authenticatedhandler.bind(this));
     }
 
     private authenticatedhandler(user: firebase.User | null) {
