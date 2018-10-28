@@ -38,6 +38,7 @@
     "@material/drawer": "^0.40.1",
     "@material/fab": "^0.40.1",
     "@material/icon-button": "^0.40.1",
+    "@material/snackbar": "^0.40.1",
     "@material/top-app-bar": "^0.40.1",
     "@types/jquery": "^3.3.6",
     "@types/pubsub-js": "^1.5.18",

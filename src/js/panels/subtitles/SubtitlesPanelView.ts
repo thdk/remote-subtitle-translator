@@ -3,8 +3,9 @@ import { IPanelDependencies, PanelWithActions } from "../panels";
 import { ISubtitle, ISession } from "../../lib";
 import { IPannelView } from "../../lib/base/panel";
 
-import {MDCRipple} from '@material/ripple';
+import { MDCRipple } from '@material/ripple';
 import { requireEl } from "../../lib/utils";
+import { Snackbar } from "../../components/snackbar";
 
 export interface ISubtitlesPanelView extends IPannelView {
     setActiveRealTimeButton(isRealtime: boolean);
@@ -18,7 +19,7 @@ export interface ISubtitlesPanelView extends IPannelView {
 }
 
 export interface ISubtitlesPanelViewDependencies extends IPanelDependencies {
-    toggleDrawer: () => void;
+    readonly snackbar: Snackbar;
 }
 
 export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPanelView {
@@ -26,13 +27,13 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
 
     private readonly $container: JQuery;
     private readonly playbackButtonEl: HTMLElement;
-    private readonly subs: { [id: string]: HTMLElement } = {};
-    private readonly toolbarToggleDrawer: () => void;
+    private subs: { [id: string]: HTMLElement } = {};
+    private readonly snackbar: Snackbar;
 
     constructor(container: HTMLElement, controllerCreator: (view: ISubtitlesPanelView) => ISubtitlesPanelController, deps: ISubtitlesPanelViewDependencies) {
         super("subtitles", container, deps);
 
-        this.toolbarToggleDrawer = deps.toggleDrawer;
+        this.snackbar = deps.snackbar;
 
         const subsPlaceholderEl = this.containerEl.querySelector("#subsContainer");
         if (!subsPlaceholderEl) throw new Error("Subtitle panel must have a placeholder element for subs");
@@ -68,7 +69,7 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
     protected init() {
         super.init();
 
-        // const fabRipple = new MDCRipple(document.querySelector('.mdc-fab'));
+        const fabRipple = new MDCRipple(this.playbackButtonEl);
 
         if (!this.containerEl)
             return;
@@ -121,8 +122,17 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
     public sessionAvailable(oldSession: ISession | undefined, newSession: ISession) {
         if (!oldSession) this.controller.requestSubtitles(newSession);
         else {
-            const result = confirm("Do you want to begin a new session?");
-            if (result) this.controller.requestSubtitles(newSession);
+            this.snackbar.show({
+                actionHandler: () => {
+                    this.containerEl.innerHTML = "";
+                    this.subs = {};
+                    this.controller.requestSubtitles(newSession);
+                },
+                message: "New session detected.",
+                actionText: "Load subs",
+                timeout: 5000,
+                multiline: true
+            });
         }
     }
 
@@ -231,6 +241,6 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
     }
 
     private scrollDown() {
-        window.scrollTo(0,document.body.scrollHeight);
+        window.scrollTo(0, document.body.scrollHeight);
     }
 }

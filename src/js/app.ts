@@ -24,6 +24,7 @@ import { IBroadcaster, IDisposable, IListener } from './lib/interfaces';
 import { requireEl } from './lib/utils';
 import { Authenticator, IAuthenticator } from './lib/authenticator';
 import { AnyMessage } from './messages';
+import { Snackbar } from './components/snackbar';
 
 export class RemoteSubtitleReceiver implements IDisposable, IListener {
     private readonly firestore: firebase.firestore.Firestore;
@@ -39,6 +40,8 @@ export class RemoteSubtitleReceiver implements IDisposable, IListener {
     private firebaseApp: firebase.app.App;
     private authenticator: IAuthenticator;
     private broadcaster: IBroadcaster;
+
+    private readonly snackbar: Snackbar;
 
     constructor(config: IAppConfig, translateService: ITranslateService) {
         // firebase
@@ -57,12 +60,13 @@ export class RemoteSubtitleReceiver implements IDisposable, IListener {
         this.panelDashboard = new PanelDashboard();
         this.broadcaster = new PubSubBroadcaster();
         this.authenticator = new Authenticator({ broadcaster: this.broadcaster, auth });
+        this.snackbar = new Snackbar(requireEl(".mdc-snackbar"));
 
-        const { broadcaster, firestore, authenticator } = this;
+        const { broadcaster, firestore, authenticator, snackbar } = this;
 
         // panels
         const subtitlesControllerCreator = (view) => new SubtitlesPanelController(view, { broadcaster, firestore, translateService });
-        this.subtitlesPanel = new SubtitlesPanelView(requireEl("#subtitle-player"), subtitlesControllerCreator, { toggleDrawer: () => this.navigation.toggle(), broadcaster: this.broadcaster });
+        this.subtitlesPanel = new SubtitlesPanelView(requireEl("#subtitle-player"), subtitlesControllerCreator, { broadcaster, snackbar });
         this.panelDashboard.setPanel(this.subtitlesPanel);
 
         const favoriteSubtitlesPanel = new FavoriteSubtitlesPanel(requireEl("#favorite-subtitles"), { broadcaster, firestore });

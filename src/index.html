@@ -32,15 +32,15 @@
 	-->
 	<header class="mdc-top-app-bar mdc-top-app-bar--fixed mdc-top-app-bar--dense">
 		<div class="mdc-top-app-bar__row">
-		  <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
-			<a href="#" class="material-icons mdc-top-app-bar__navigation-icon rst-top-bar-menu-item">menu</a>
-			<span class="mdc-top-app-bar__title rst-title"></span>
-		  </section>
-		  <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end rst-actions" role="toolbar">
+			<section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+				<a href="#" class="material-icons mdc-top-app-bar__navigation-icon rst-top-bar-menu-item">menu</a>
+				<span class="mdc-top-app-bar__title rst-title"></span>
+			</section>
+			<section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end rst-actions" role="toolbar">
 
-		  </section>
+			</section>
 		</div>
-	  </header>
+	</header>
 
 	<aside class="mdc-drawer mdc-drawer--modal">
 		<div class="mdc-drawer__content">
@@ -117,6 +117,13 @@
 
 	<div class="panel" id="authentication" style="display: none;">
 		<div id="firebaseui-auth-container"></div>
+	</div>
+
+	<div class="mdc-snackbar" aria-live="assertive" aria-atomic="true" aria-hidden="true">
+		<div class="mdc-snackbar__text"></div>
+		<div class="mdc-snackbar__action-wrapper">
+			<button type="button" class="mdc-snackbar__action-button"></button>
+		</div>
 	</div>
 </body>
 
