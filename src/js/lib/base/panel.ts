@@ -1,4 +1,5 @@
 import { IDisposable, IController, IMessage, IBroadcaster } from "../interfaces";
+import { AnyMessage } from "../../messages";
 
 export interface IPanel {
     readonly containerEl: HTMLElement;
@@ -25,8 +26,8 @@ export interface IPanelControllerDependencies {
     broadcaster: IBroadcaster;
 }
 
-export class PanelController implements IPannelController {
-    private readonly broadcaster: IPanelControllerDependencies["broadcaster"];
+export abstract class PanelController implements IPannelController {
+    protected readonly broadcaster: IPanelControllerDependencies["broadcaster"];
     protected readonly view: IPannelView;
     constructor(view: IPannelView, deps: IPanelControllerDependencies) {
         this.view = view;
@@ -36,12 +37,13 @@ export class PanelController implements IPannelController {
     public subscribe() {
         this.broadcaster.subscribe(this);
     }
-
-    public dispose() {
+    public unsubscribe() {
         this.broadcaster.unsubscribe(this);
     }
 
-    public onMessage() {
-
+    public dispose() {
+        this.unsubscribe();
     }
+
+    public abstract onMessage(message: AnyMessage);
 }

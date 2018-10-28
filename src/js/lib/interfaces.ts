@@ -10,6 +10,7 @@ export interface IMessage {
 export interface IListener {
     onMessage(message: IMessage): void;
     subscribe(): void;
+    unsubscribe(): void;
 }
 
 export interface IBroadcaster extends IDisposable{

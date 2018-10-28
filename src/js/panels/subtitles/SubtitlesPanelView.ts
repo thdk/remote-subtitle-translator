@@ -1,6 +1,6 @@
 import { ISubtitlesPanelController } from "./SubtitlesPanelController";
 import { IPanelDependencies, PanelWithActions } from "../panels";
-import { ISubtitle } from "../../lib";
+import { ISubtitle, ISession } from "../../lib";
 import { IPannelView } from "../../lib/base/panel";
 
 import {MDCRipple} from '@material/ripple';
@@ -14,6 +14,7 @@ export interface ISubtitlesPanelView extends IPannelView {
     setActiveHideOriginals(hideOriginals: boolean);
     addSubtitleToDom(sub: ISubtitle): void;
     updateSubtitleInDom(oldSub: ISubtitle, newSub: ISubtitle);
+    sessionAvailable(oldSession: ISession | undefined, newSession: ISession);
 }
 
 export interface ISubtitlesPanelViewDependencies extends IPanelDependencies {
@@ -100,8 +101,6 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
 
     public deinit() {
         this.$container.off(".rst");
-
-        this.dispose();
         super.deinit();
     }
 
@@ -111,12 +110,20 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
 
     public openAsync() {
         this.controller.subscribe();
-        this.controller.requestSubtitles();
         return super.openAsync();
     }
 
     public close() {
+        this.controller.unsubscribe();
         super.close();
+    }
+
+    public sessionAvailable(oldSession: ISession | undefined, newSession: ISession) {
+        if (!oldSession) this.controller.requestSubtitles(newSession);
+        else {
+            const result = confirm("Do you want to begin a new session?");
+            if (result) this.controller.requestSubtitles(newSession);
+        }
     }
 
     public setActiveRealTimeButton(isRealtime: boolean) {

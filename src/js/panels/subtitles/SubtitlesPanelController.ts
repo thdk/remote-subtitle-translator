@@ -1,6 +1,6 @@
 import { ISubtitlesPanelView } from "./SubtitlesPanelView";
 import { ITranslateService, ISession, ISubtitle, getCurrentUserAsync } from "../../lib";
-import { IDisposable, IListener, IController } from "../../lib/interfaces";
+import { IDisposable, IListener, IController, IMessage } from "../../lib/interfaces";
 
 import * as firebase from "firebase";
 import "firebase/firestore";
@@ -9,8 +9,16 @@ import { PanelController } from "../../lib/base/panel";
 import { IPanelDependencies } from "../panels";
 import { getLoggedInUserAsync } from "../../lib/authenticator";
 import { stringify } from "querystring";
-import { getLastValueInMap } from "../../lib/utils";
+import { getLastValueInMap, Omit } from "../../lib/utils";
+import { AnyMessage } from "../../messages";
 
+export interface ISessionMessage extends IMessage {
+    type: "session";
+    payload: {
+        event: "new",
+        session: ISession
+    }
+}
 export interface ISubtitlesPanelController extends IController {
     togglePlayback: () => void;
     translate(subId: string, text: string);
@@ -19,7 +27,7 @@ export interface ISubtitlesPanelController extends IController {
     toggleHideOriginals(): void;
     toggleSingleView(): void;
     shouldHideOriginals(): boolean;
-    requestSubtitles(): void;
+    requestSubtitles(session: ISession): void;
 }
 
 type PlayerSettings = {
@@ -39,14 +47,15 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
 
     private readonly translateService: ITranslateService;
     private readonly dbSubtitlesRef: firebase.firestore.CollectionReference;
-    private readonly session?: ISession;
+    private session?: ISession;
 
     private readonly dbFavoritesRef: firebase.firestore.CollectionReference;
     private readonly dbSessionsRef: firebase.firestore.CollectionReference;
 
     private readonly subs: Map<string, ISubtitle>
 
-    private firestoreUnsubscribe?: () => void;
+    private subtitlesUnsubscribe?: () => void;
+    private sessionsUnsubscribe?: () => void;
 
     constructor(view: ISubtitlesPanelView, deps: ISubtitlesPanelControllerDependencies) {
         super(view, deps);
@@ -79,78 +88,94 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
             });
     }
 
-    public requestSubtitles() {
-        this.getSessionAsync().then(session => {
-            // unsubscribe from previous firestore queries
-            if (this.firestoreUnsubscribe) this.firestoreUnsubscribe();
-
-            const lastSubtitleReceived = getLastValueInMap(this.subs);
-            this.firestoreUnsubscribe = this.dbSubtitlesRef
-                .where("sessionId", "==", session.id)
-                .orderBy("created", "asc")
-                .startAfter(lastSubtitleReceived ? lastSubtitleReceived.created : 0)
+    private watchSessionsAsync() {
+        return getLoggedInUserAsync().then(user => {
+            return this.dbSessionsRef
+                .where("uid", "==", user.uid)
+                .orderBy("created", "desc")
+                .limit(1)
                 .onSnapshot(snapshot => {
-                    snapshot.docChanges().forEach(change => {
-                        const subtitle = Object.assign(change.doc.data(), { id: change.doc.id }) as ISubtitle;
-                        if (change.type === "added") {
-                            this.subs.set(subtitle.id, subtitle);
-                            this.view.addSubtitleToDom(subtitle);
-
-                            if (!subtitle.translation && this.settings.realtimeTranslation) {
-                                this.translate(subtitle.id, subtitle.subtitle);
-                            }
-                        }
-                        if (change.type === "modified") {
-                            const oldSub = this.subs.get(subtitle.id);
-                            if (oldSub) {
-                                const newSub = { ...oldSub, ...subtitle };
-                                this.subs.set(subtitle.id, newSub);
-                                this.view.updateSubtitleInDom(oldSub, newSub);
-                                if (oldSub.translation || (!subtitle.translation && this.settings.realtimeTranslation)) {
-                                    this.translate(subtitle.id, subtitle.subtitle);
-                                }
-                            } else {
-                                // TODO: subtitle did not exist on the client yet => add it
-                            }
-                        }
-                        if (change.type === "removed") {
-                            throw 'not implemented';
-                        }
-                    });
+                    if (snapshot.size) {
+                        const change = snapshot.docs[0];
+                        const s: ISession = Object.assign<Pick<ISession, "id">, Exclude<ISession, "id">>({ id: change.id }, change.data() as Exclude<ISession, "id">);
+                        this.broadcaster.postMessage<ISessionMessage>("session", { event: "new", session: s });
+                    }
                 });
         });
     }
 
-    private getSessionAsync() {
-        return new Promise<ISession>((resolve, reject) => {
-            if (this.session) {
-                resolve(this.session);
-                return;
-            }
+    public requestSubtitles(session: ISession) {
+        if (this.session && this.session.id !== session.id)
+        {
+            this.subs.clear();
+        }
 
-            // get most recent session for logged in user
-            return getLoggedInUserAsync().then(user => {
-                this.dbSessionsRef.where("uid", "==", user.uid).orderBy("created", "desc").limit(1)
-                    .get()
-                    .then(querySnapshot => {
-                        let session: ISession | null = null;
-                        if (querySnapshot.docs.length) {
-                            const sessionSnapshot = querySnapshot.docs[0];
-                            session = Object.assign({ id: sessionSnapshot.id }, sessionSnapshot.data());
+        this.session = session;
+
+        // unsubscribe from previous firestore queries
+        if (this.subtitlesUnsubscribe) this.subtitlesUnsubscribe();
+
+        const lastSubtitleReceived = getLastValueInMap(this.subs);
+        this.subtitlesUnsubscribe = this.dbSubtitlesRef
+            .where("sessionId", "==", session.id)
+            .orderBy("created", "asc")
+            .startAfter(lastSubtitleReceived ? lastSubtitleReceived.created : 0)
+            .onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    const subtitle = Object.assign(change.doc.data(), { id: change.doc.id }) as ISubtitle;
+                    if (change.type === "added") {
+                        this.subs.set(subtitle.id, subtitle);
+                        this.view.addSubtitleToDom(subtitle);
+
+                        if (!subtitle.translation && this.settings.realtimeTranslation) {
+                            this.translate(subtitle.id, subtitle.subtitle);
                         }
-                        if (session) resolve(session);
-                        else reject("No sessions found");
-                    })
-                    .catch(error => {
-                        reject("Error getting documents: " + error);
-                    });
+                    }
+                    if (change.type === "modified") {
+                        const oldSub = this.subs.get(subtitle.id);
+                        if (oldSub) {
+                            const newSub = { ...oldSub, ...subtitle };
+                            this.subs.set(subtitle.id, newSub);
+                            this.view.updateSubtitleInDom(oldSub, newSub);
+                            if (oldSub.translation || (!subtitle.translation && this.settings.realtimeTranslation)) {
+                                this.translate(subtitle.id, subtitle.subtitle);
+                            }
+                        } else {
+                            // TODO: subtitle did not exist on the client yet => add it
+                        }
+                    }
+                    if (change.type === "removed") {
+                        throw 'not implemented';
+                    }
+                });
             });
+    }
 
-        });
+    public onMessage(message: AnyMessage) {
+        console.log(message);
+        switch (message.type) {
+            case "session": {
+                if (message.payload.event === "new") {
+                    if (!this.session || this.session.id !== message.payload.session.id) {
+                        this.view.sessionAvailable(this.session, message.payload.session);
+                    }
+                }
+            }
+        }
+    }
+
+    public subscribe() {
+        super.subscribe();
+        this.watchSessionsAsync().then(u => this.sessionsUnsubscribe = u);
+    }
+
+    public unsubscribe() {
+        if (this.subtitlesUnsubscribe) this.subtitlesUnsubscribe();
+        if (this.sessionsUnsubscribe) this.sessionsUnsubscribe();
+        super.unsubscribe();
     }
 
     public dispose() {
-        if (this.firestoreUnsubscribe) this.firestoreUnsubscribe();
         super.dispose();
     }
 

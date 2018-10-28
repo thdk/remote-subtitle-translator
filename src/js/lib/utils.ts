@@ -1,3 +1,5 @@
+export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
+
 export const getLastItemInMap = map => Array.from(map)[map.size - 1];
 export const getLastKeyInMap = map => Array.from(map)[map.size - 1][0];
 export const getLastValueInMap = <T, K = any>(map: Map<K, T>, n = 1) => {

@@ -14,15 +14,17 @@ export class PubSubBroadcaster implements IBroadcaster {
     }
 
     public subscribe(listener: IListener) {
-        const unsubscribe = pubsub.subscribe(this.topic, (topic, data) => {
+        const unsubscribeToken = pubsub.subscribe(this.topic, (topic, data) => {
             listener.onMessage({ type: data.type, payload: data });
         });
 
-        this.subscriptions.set(listener, () => unsubscribe());
+        this.subscriptions.set(listener, () => pubsub.unsubscribe(unsubscribeToken));
     }
 
     public unsubscribe(listener: IListener) {
-        this.subscriptions.get(listener)!();
+        const unsubscribe = this.subscriptions.get(listener);
+        if (unsubscribe) unsubscribe();
+        else console.log("ERROR: Trying to unsubscribe from broadcaster but it was never subscribed.");
     }
 
     public dispose() {

@@ -34,7 +34,11 @@ export class AppBarController implements IAppBarController {
         this.broadcaster.subscribe(this);
     }
 
-    public dispose() {
+    public unsubscribe() {
         this.broadcaster.unsubscribe(this);
+    }
+
+    public dispose() {
+        this.unsubscribe();
     }
 }

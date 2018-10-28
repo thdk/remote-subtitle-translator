@@ -97,6 +97,8 @@ export class RemoteSubtitleReceiver implements IDisposable, IListener {
 
     public dispose() {
         this.appBar.dispose();
+        this.subtitlesPanel.dispose();
+        this.unsubscribe();
     }
 
     public onMessage(msg: AnyMessage) {
@@ -110,6 +112,10 @@ export class RemoteSubtitleReceiver implements IDisposable, IListener {
 
     public subscribe() {
         this.broadcaster.subscribe(this);
+    }
+
+    public unsubscribe() {
+        this.broadcaster.unsubscribe(this);
     }
 }
 

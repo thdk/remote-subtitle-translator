@@ -25,7 +25,7 @@
         subtitle: string;
         translation?: string;
         favoriteId?: string;
-        created: any;
+        created: firebase.firestore.Timestamp;
         time?: number;
         isMulti: boolean;
     }
@@ -33,6 +33,8 @@
     export interface ISession {
         isWatching?: boolean;
         id: string;
+        uid: string;
+        created: firebase.firestore.Timestamp;
     }
 
     export interface IFavoriteSubtitle {
