@@ -124,7 +124,7 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
         else {
             this.snackbar.show({
                 actionHandler: () => {
-                    this.containerEl.innerHTML = "";
+                    this.$container[0].innerHTML = "";
                     this.subs = {};
                     this.controller.requestSubtitles(newSession);
                 },
