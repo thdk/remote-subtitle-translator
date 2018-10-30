@@ -15,7 +15,7 @@ import { AnyMessage } from "../../messages";
 export interface ISessionMessage extends IMessage {
     type: "session";
     payload: {
-        event: "new",
+        event: "new" | "modified",
         session: ISession
     }
 }
@@ -71,6 +71,7 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
         // reflect default settings in view with their side effects
         this.settingsSetHideOriginals(this.settings.hideOriginals);
         this.settingsSetRealtimeTranslation(this.settings.realtimeTranslation);
+        this.view.setPlaybackState(false);
 
         this.translateService = deps.translateService;
         this.dbSubtitlesRef = deps.firestore.collection("subtitles");
@@ -79,13 +80,33 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
     }
 
     public togglePlayback() {
-        if (!this.dbSessionsRef || !this.session) return;
+        if (!this.session) return;
 
-        this.dbSessionsRef.doc(this.session.id)
-            .update({ isWatching: !this.session.isWatching })
-            .then(() => {
-                this.session!.isWatching = !this.session!.isWatching;
+        this.firestoreUpdateAsync<ISession>(this.dbSessionsRef,
+            {
+                isWatching: !this.session.isWatching,
+                id: this.session.id
             });
+    }
+
+    public toggleRealtimeTranslation() {
+        if (!this.session) return;
+
+        this.firestoreUpdateAsync<ISession>(this.dbSessionsRef,
+            {
+                isRealtimeEnabled: !this.session.isRealtimeEnabled,
+                id: this.session.id
+            });
+    }
+
+    private firestoreUpdateAsync<T extends firebase.firestore.UpdateData>(collectionRef: firebase.firestore.CollectionReference, data: Partial<T> & Pick<T, "id">) {
+        return collectionRef
+            .doc(data.id)
+            .update(data);
+    }
+
+    private firestoreTypeData<T extends firebase.firestore.DocumentData>(data: { id: string, data: () => firebase.firestore.DocumentData }): T {
+        return Object.assign<Pick<T, "id">, Exclude<T, "id">>({ id: data.id }, data.data() as Exclude<T, "id">);
     }
 
     private watchSessionsAsync() {
@@ -95,22 +116,31 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
                 .orderBy("created", "desc")
                 .limit(1)
                 .onSnapshot(snapshot => {
-                    if (snapshot.size) {
-                        const change = snapshot.docs[0];
-                        const s: ISession = Object.assign<Pick<ISession, "id">, Exclude<ISession, "id">>({ id: change.id }, change.data() as Exclude<ISession, "id">);
-                        this.broadcaster.postMessage<ISessionMessage>("session", { event: "new", session: s });
-                    }
+                    snapshot.docChanges().forEach(change => {
+                        const session = this.firestoreTypeData<ISession>(change.doc);
+                        if (change.type === "added") {
+                            this.broadcaster.postMessage<ISessionMessage>("session", { event: "new", session });
+                        }
+                        else if (change.type === "modified") {
+                            if (this.session && this.session.id === session.id) {
+                                this.session = { ...this.session, ...session };
+                                this.broadcaster.postMessage<ISessionMessage>("session", { event: "modified", session: this.session });
+                            }
+                        }
+                    });
                 });
         });
     }
 
     public requestSubtitles(session: ISession) {
-        if (this.session && this.session.id !== session.id)
-        {
+        if (this.session && this.session.id !== session.id) {
             this.subs.clear();
         }
 
         this.session = session;
+
+        // set the view session state
+        this.view.setPlaybackState(session.isWatching);
 
         // unsubscribe from previous firestore queries
         if (this.subtitlesUnsubscribe) this.subtitlesUnsubscribe();
@@ -159,6 +189,11 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
                     if (!this.session || this.session.id !== message.payload.session.id) {
                         this.view.sessionAvailable(this.session, message.payload.session);
                     }
+                }
+                else if (message.payload.event === "modified") {
+                    const {isRealtimeEnabled, isWatching} = message.payload.session;
+                    this.settingsSetRealtimeTranslation(isRealtimeEnabled);
+                    this.view.setPlaybackState(isWatching);
                 }
             }
         }
@@ -232,10 +267,6 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
                 });
             }
         });
-    }
-
-    public toggleRealtimeTranslation() {
-        this.settingsSetRealtimeTranslation(!this.settings.realtimeTranslation);
     }
 
     public toggleHideOriginals() {

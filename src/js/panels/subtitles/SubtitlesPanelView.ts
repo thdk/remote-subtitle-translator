@@ -11,6 +11,7 @@ export interface ISubtitlesPanelView extends IPannelView {
     setActiveRealTimeButton(isRealtime: boolean);
     setActiveHideOriginalsButton(hideOriginals: boolean);
     setSingleViewMode();
+    setPlaybackState(isPlaying: boolean);
     toolbarToggleHideOriginalsButton(view: boolean);
     setActiveHideOriginals(hideOriginals: boolean);
     addSubtitleToDom(sub: ISubtitle): void;
@@ -26,7 +27,8 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
     private readonly controller: ISubtitlesPanelController;
 
     private readonly $container: JQuery;
-    private readonly playbackButtonEl: HTMLElement;
+    private readonly playFabEl: HTMLElement;
+    private readonly pauseFabEl: HTMLElement;
     private subs: { [id: string]: HTMLElement } = {};
     private readonly snackbar: Snackbar;
 
@@ -40,7 +42,8 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
 
         // todo: get rid of JQuery
         this.$container = $(subsPlaceholderEl as HTMLElement);
-        this.playbackButtonEl = requireEl(".rst-toggleplayback", this.containerEl);
+        this.playFabEl = requireEl(".rst-playFab", this.containerEl);
+        this.pauseFabEl = requireEl(".rst-pauseFab", this.containerEl);
 
         this.controller = controllerCreator(this);
 
@@ -69,7 +72,9 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
     protected init() {
         super.init();
 
-        const fabRipple = new MDCRipple(this.playbackButtonEl);
+        // todo: use attach to instead of new MDCRipple
+        const fabRipple = new MDCRipple(this.playFabEl);
+        const fabRipplePause = new MDCRipple(this.pauseFabEl);
 
         if (!this.containerEl)
             return;
@@ -95,9 +100,15 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
             this.controller.toggleSubtitleInFavorites(subId);
         });
 
-        this.playbackButtonEl.addEventListener("click", (e) => {
+        this.playFabEl.addEventListener("click", (e) => {
             this.controller.togglePlayback();
-        })
+            this.playFabEl.classList.add("mdc-fab--exited");
+        });
+
+        this.pauseFabEl.addEventListener("click", (e) => {
+            this.controller.togglePlayback();
+            this.pauseFabEl.classList.add("mdc-fab--exited");
+        });
     }
 
     public deinit() {
@@ -136,6 +147,17 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
         }
     }
 
+    public setPlaybackState(isPlaying: boolean) {
+        if (isPlaying) {
+            this.pauseFabEl.classList.remove("mdc-fab--exited");
+            this.playFabEl.classList.add("mdc-fab--exited");
+        }
+        else {
+            this.pauseFabEl.classList.add("mdc-fab--exited");
+            this.playFabEl.classList.remove("mdc-fab--exited");
+        }
+    }
+
     public setActiveRealTimeButton(isRealtime: boolean) {
         // TODO: implement this
     }
@@ -159,7 +181,6 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
     }
 
     public addSubtitleToDom(sub: ISubtitle) {
-        // todo: use an dictionary to keep reference of subtitles in DOM by id
         const template = this.getSubtitleTemplate(sub);
 
         // based on current scroll position, decide before appending new item to DOM
