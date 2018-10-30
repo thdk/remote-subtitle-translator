@@ -1,7 +1,7 @@
-import { INavigationView } from "./TopNavigationView";
 import { AnyMessage } from "../messages";
 import { IPannelController } from "../lib/base/panel";
-import { IDisposable, IBroadcaster, IListener, IController } from "../lib/interfaces";
+import { IBroadcaster, IController } from "../lib/interfaces";
+import { INavigationView } from "./DrawerNavigationView";
 
 export interface INavigationController extends IPannelController {
     itemClicked: (itemName: string) => void;

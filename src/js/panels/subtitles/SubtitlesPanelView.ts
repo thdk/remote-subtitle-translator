@@ -42,31 +42,14 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
 
         // todo: get rid of JQuery
         this.$container = $(subsPlaceholderEl as HTMLElement);
+
         this.playFabEl = requireEl(".rst-playFab", this.containerEl);
         this.pauseFabEl = requireEl(".rst-pauseFab", this.containerEl);
 
         this.controller = controllerCreator(this);
 
-        // TODO: move to controller?
-        this.actions = [
-            {
-                iconActive: "cloud",
-                icon: "cloud_off",
-                text: "Realtime",
-                action: () => this.controller.toggleRealtimeTranslation()
-            },
-            {
-                iconActive: "unfold_less",
-                icon: "unfold_more",
-                text: "English only",
-                action: () => this.controller.toggleHideOriginals()
-            },
-            {
-                icon: "fullscreen",
-                text: "Fullscreen",
-                action: () => this.controller.toggleSingleView()
-            }
-        ];
+        // TODO: use message to inform app bar with possible actions
+        this.actions = this.controller.getActions();
     }
 
     protected init() {
@@ -102,12 +85,10 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
 
         this.playFabEl.addEventListener("click", (e) => {
             this.controller.togglePlayback();
-            this.playFabEl.classList.add("mdc-fab--exited");
         });
 
         this.pauseFabEl.addEventListener("click", (e) => {
             this.controller.togglePlayback();
-            this.pauseFabEl.classList.add("mdc-fab--exited");
         });
     }
 

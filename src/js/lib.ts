@@ -32,7 +32,7 @@
 
     export interface ISession {
         isWatching: boolean;
-        isRealtimeEnabled: boolean;
+        isRealtimeTranslated: boolean;
         id: string;
         uid: string;
         created: firebase.firestore.Timestamp;

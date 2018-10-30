@@ -1,7 +1,6 @@
 import { IAppBarView, IAppBarAction } from "./AppBarView";
-import { IPannelController } from "../lib/base/panel";
 import { AnyMessage } from "../messages";
-import { IDisposable, IController, IControllerDependencies } from "../lib/interfaces";
+import { IController, IControllerDependencies } from "../lib/interfaces";
 
 export interface IAppBarController extends IController {
 }

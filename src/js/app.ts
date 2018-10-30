@@ -3,7 +3,6 @@ import { config, IAppConfig } from '../config';
 import { AuthenticationPanel } from './panels/authenticationPanel';
 import { ITranslateService, HttpNetwork, GoogleTranslate } from './lib';
 import { SettingsPanel } from './panels/settings';
-import { INavigationView } from './navigation/TopNavigationView';
 import { PanelDashboard } from './panels/dashboard';
 import { FavoriteSubtitlesPanel } from './panels/favoriteSubtitles';
 
@@ -14,7 +13,7 @@ import 'firebase/auth';
 import 'firebase/database';
 import { SubtitlesPanelView, ISubtitlesPanelView } from './panels/subtitles/SubtitlesPanelView';
 import { SubtitlesPanelController } from './panels/subtitles/SubtitlesPanelController';
-import { DrawerNavigationView } from './navigation/DrawerNavigationView';
+import { DrawerNavigationView, INavigationView } from './navigation/DrawerNavigationView';
 import { NavigationController, INavigationControllerDependencies } from './navigation/NavigationController';
 import { AppBarView } from './appbar/AppBarView';
 import { AppBarController } from './appbar/AppBarController';
@@ -64,8 +63,21 @@ export class RemoteSubtitleReceiver implements IDisposable, IListener {
 
         const { broadcaster, firestore, authenticator, snackbar } = this;
 
+        const isVideoMode = () => {
+            if (URLSearchParams) {
+                const urlParams = new URLSearchParams(window.location.search);
+                return (!!urlParams.get('iframe'));
+            }
+            else {
+                // URLSearchParams not supported by browser
+                // VideoMode is only meant for chrome extension loading the subs in iframe
+                // Since chrome does support URLSearchParams we can safely return false here.
+                return false;
+            }
+        };
+
         // panels
-        const subtitlesControllerCreator = (view) => new SubtitlesPanelController(view, { broadcaster, firestore, translateService });
+        const subtitlesControllerCreator = (view) => new SubtitlesPanelController(view, { broadcaster, firestore, translateService, isVideoMode });
         this.subtitlesPanel = new SubtitlesPanelView(requireEl("#subtitle-player"), subtitlesControllerCreator, { broadcaster, snackbar });
         this.panelDashboard.setPanel(this.subtitlesPanel);
 
@@ -93,7 +105,14 @@ export class RemoteSubtitleReceiver implements IDisposable, IListener {
             else return openPanel.actions;
         };
 
-        this.appBar = new AppBarView({ toggleMenu: () => this.navigation.toggle() }, view => new AppBarController(view, { getActions, broadcaster }));
+        this.appBar = new AppBarView(
+            { toggleMenu: () => this.navigation.toggle() },
+            view => new AppBarController(view, { getActions, broadcaster }),
+            {
+                type: isVideoMode() ? "short" : "dense",
+                fixed: false
+            }
+        );
 
         this.subscribe();
         this.authenticator.watchAuthenticatedUser();

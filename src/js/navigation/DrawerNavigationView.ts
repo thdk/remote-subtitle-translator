@@ -1,10 +1,15 @@
 import { INavigationController } from "./NavigationController";
 
 import {MDCDrawer} from "@material/drawer";
-import { INavigationView } from "./TopNavigationView";
 
 interface IDrawer {
     open: boolean;
+}
+
+export interface INavigationView {
+    show();
+    hide();
+    toggle();
 }
 
 export class DrawerNavigationView implements INavigationView {

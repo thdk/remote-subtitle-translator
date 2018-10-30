@@ -14,31 +14,48 @@ export interface IAppBarAction {
 }
 
 export interface IAppBarView {
-    setActions(actions: IAppBarAction[] | undefined)
+    setActions(actions: IAppBarAction[] | undefined);
+    show(): void;
+    hide(): void;
 }
 
 export interface IAppBarDependencies {
     toggleMenu: () => void;
 }
 
+
+export interface IAppBarOptions {
+    type: "short" | "dense" | "prominent" | "fixed" | "standard";
+    fixed: boolean;
+}
+
 export class AppBarView implements IAppBarView {
     private readonly topAppBar: MDCTopAppBar
     private readonly toggleMenu: () => void;
     private readonly topAppBarEl: HTMLElement;
+    private readonly contentEl: HTMLElement;
     private readonly menuItemEl: HTMLElement;
     private readonly titleEl: HTMLElement;
     private readonly actionsEl: HTMLElement;
     private readonly controller: IAppBarController;
     private actions: { [id: string]: () => void } = {};
+    private readonly options: IAppBarOptions;
 
-    constructor(deps: IAppBarDependencies, contollerCreator: (view) => IAppBarController) {
+    constructor(deps: IAppBarDependencies, contollerCreator: (view) => IAppBarController, options: IAppBarOptions = {type: "standard", fixed: false}) {
+        this.options = options;
         this.topAppBarEl = requireEl(".mdc-top-app-bar");
+        this.contentEl = this.topAppBarEl.nextElementSibling as HTMLElement;
+        if (!this.contentEl) throw "App must have html content following the top app bar";
+
         this.menuItemEl = requireEl(".rst-top-bar-menu-item", this.topAppBarEl);
         this.titleEl = requireEl(".rst-title", this.topAppBarEl);
         this.actionsEl = requireEl(".rst-actions", this.topAppBarEl);
-        this.topAppBar = new MDCTopAppBar(this.topAppBarEl);
-        this.toggleMenu = deps.toggleMenu;
 
+        // css classes must be set before initializing the material app bar component
+        this.setCssClasses();
+        this.topAppBar = new MDCTopAppBar(this.topAppBarEl);
+
+        this.toggleMenu = deps.toggleMenu;
         this.controller = contollerCreator(this);
 
         // TODO: pass config options with title and actions
@@ -106,6 +123,24 @@ export class AppBarView implements IAppBarView {
         this.titleEl.textContent = title ? title : null;
     }
 
+    private setCssClasses() {
+        const {type, fixed} = this.options;
+
+        // short
+        this.topAppBarEl.classList.toggle("mdc-top-app-bar--short", type === "short");
+        this.contentEl.classList.toggle("mdc-top-app-bar--short-fixed-adjust", type === "short");
+
+        // dense
+        this.topAppBarEl.classList.toggle("mdc-top-app-bar--dense", type === "dense");
+        this.contentEl.classList.toggle("mdc-top-app-bar--dense-fixed-adjust", type === "dense");
+
+        // standard
+        this.contentEl.classList.toggle("mdc-top-app-bar--fixed-adjust", type === "standard");
+
+        // fixed
+        this.topAppBarEl.classList.toggle("mdc-top-app-bar--fixed", fixed);
+    }
+
     private getActionTemplate(action: IAppBarAction, active = false) {
         return `
             <button data-action-id=${action.icon} class="rst-action mdc-icon-button${active ? " mdc-icon-button--on" : ""}" aria-label="${action.text}"
@@ -114,5 +149,13 @@ export class AppBarView implements IAppBarView {
                 <i class="material-icons mdc-icon-button__icon">${action.icon}</i>
             </button>
         `;
+    }
+
+    public show() {
+        this.topAppBarEl.style.display = "block";
+    }
+
+    public hide() {
+        this.topAppBarEl.style.display = "none";
     }
 }

@@ -11,6 +11,7 @@ import { getLoggedInUserAsync } from "../../lib/authenticator";
 import { stringify } from "querystring";
 import { getLastValueInMap, Omit } from "../../lib/utils";
 import { AnyMessage } from "../../messages";
+import { IAppBarAction } from "../../appbar/AppBarView";
 
 export interface ISessionMessage extends IMessage {
     type: "session";
@@ -28,6 +29,7 @@ export interface ISubtitlesPanelController extends IController {
     toggleSingleView(): void;
     shouldHideOriginals(): boolean;
     requestSubtitles(session: ISession): void;
+    getActions(): IAppBarAction[];
 }
 
 type PlayerSettings = {
@@ -38,6 +40,7 @@ type PlayerSettings = {
 export interface ISubtitlesPanelControllerDependencies extends IPanelDependencies {
     firestore: firebase.firestore.Firestore;
     translateService: ITranslateService;
+    isVideoMode: () => boolean;
 }
 
 export class SubtitlesPanelController extends PanelController implements ISubtitlesPanelController {
@@ -56,6 +59,7 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
 
     private subtitlesUnsubscribe?: () => void;
     private sessionsUnsubscribe?: () => void;
+    private readonly isVideoMode: () => boolean;
 
     constructor(view: ISubtitlesPanelView, deps: ISubtitlesPanelControllerDependencies) {
         super(view, deps);
@@ -68,15 +72,44 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
             hideOriginals: false
         }
 
+        this.isVideoMode = deps.isVideoMode;
+
         // reflect default settings in view with their side effects
         this.settingsSetHideOriginals(this.settings.hideOriginals);
         this.settingsSetRealtimeTranslation(this.settings.realtimeTranslation);
-        this.view.setPlaybackState(false);
+        this.setPlaybackState(false);
 
         this.translateService = deps.translateService;
         this.dbSubtitlesRef = deps.firestore.collection("subtitles");
         this.dbSessionsRef = deps.firestore.collection("sessions");
         this.dbFavoritesRef = deps.firestore.collection("favorites");
+    }
+
+    /**
+     * TODO: broadcast message with actions when panel opens
+     */
+    public getActions() {
+        if (this.isVideoMode())
+            return [];
+        else return [
+            {
+                iconActive: "cloud",
+                icon: "cloud_off",
+                text: "Realtime",
+                action: () => this.toggleRealtimeTranslation()
+            },
+            {
+                iconActive: "unfold_less",
+                icon: "unfold_more",
+                text: "English only",
+                action: () => this.toggleHideOriginals()
+            },
+            {
+                icon: "fullscreen",
+                text: "Fullscreen",
+                action: () => this.toggleSingleView()
+            }
+        ];
     }
 
     public togglePlayback() {
@@ -94,7 +127,7 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
 
         this.firestoreUpdateAsync<ISession>(this.dbSessionsRef,
             {
-                isRealtimeEnabled: !this.session.isRealtimeEnabled,
+                isRealtimeTranslated: !this.session.isRealtimeTranslated,
                 id: this.session.id
             });
     }
@@ -140,7 +173,7 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
         this.session = session;
 
         // set the view session state
-        this.view.setPlaybackState(session.isWatching);
+        this.setPlaybackState(session.isWatching);
 
         // unsubscribe from previous firestore queries
         if (this.subtitlesUnsubscribe) this.subtitlesUnsubscribe();
@@ -191,9 +224,10 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
                     }
                 }
                 else if (message.payload.event === "modified") {
-                    const {isRealtimeEnabled, isWatching} = message.payload.session;
-                    this.settingsSetRealtimeTranslation(isRealtimeEnabled);
-                    this.view.setPlaybackState(isWatching);
+                    const { isRealtimeTranslated, isWatching } = message.payload.session;
+                    this.settingsSetRealtimeTranslation(isRealtimeTranslated);
+
+                    if (this.canSetPlaybackState()) this.view.setPlaybackState(isWatching);
                 }
             }
         }
@@ -294,5 +328,13 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
     private settingsSetHideOriginals(hideOriginals: boolean) {
         this.settings.hideOriginals = hideOriginals;
         this.view.setActiveHideOriginals(hideOriginals);
+    }
+
+    private setPlaybackState(state: boolean) {
+        if (this.canSetPlaybackState()) this.view.setPlaybackState(state);
+    }
+
+    private canSetPlaybackState() {
+        return !this.isVideoMode();
     }
 }

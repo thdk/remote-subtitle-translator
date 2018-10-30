@@ -25,23 +25,6 @@
 	<script src="https://www.gstatic.com/firebasejs/5.0.4/firebase-firestore.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/pubsub-js/1.6.1/pubsub.min.js"></script>
 	<script src="./js/app.js?4"></script>
-
-	<!--
-		Waiting for bottom-app-bar to be developed for material design web components
-		Temporary using the top-app-bar component.
-	-->
-	<header class="mdc-top-app-bar mdc-top-app-bar--fixed mdc-top-app-bar--dense">
-		<div class="mdc-top-app-bar__row">
-			<section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
-				<a href="#" class="material-icons mdc-top-app-bar__navigation-icon rst-top-bar-menu-item">menu</a>
-				<span class="mdc-top-app-bar__title rst-title"></span>
-			</section>
-			<section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end rst-actions" role="toolbar">
-
-			</section>
-		</div>
-	</header>
-
 	<aside class="mdc-drawer mdc-drawer--modal">
 		<div class="mdc-drawer__content">
 			<nav class="mdc-list">
@@ -63,63 +46,81 @@
 
 	<div class="mdc-drawer-scrim"></div>
 
-	<div id="subtitle-player" class="panel" style="display: none;">
-		<div class="hidescrollbar-wrapper subs-wrapper">
-			<div class="subs hidescrollbar">
-				<div id="subsContainer"></div>
-				<div class="clear"></div>
+	<!--
+		Waiting for bottom-app-bar to be developed for material design web components
+		Temporary using the top-app-bar component.
+	-->
+	<header class="mdc-top-app-bar">
+		<div class="mdc-top-app-bar__row">
+			<section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+				<a href="#" class="material-icons mdc-top-app-bar__navigation-icon rst-top-bar-menu-item">menu</a>
+				<span class="mdc-top-app-bar__title rst-title"></span>
+			</section>
+			<section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end rst-actions" role="toolbar">
+
+			</section>
+		</div>
+	</header>
+	<div class="content">
+		<div id="subtitle-player" class="panel" style="display: none;">
+			<div class="hidescrollbar-wrapper subs-wrapper">
+				<div class="subs hidescrollbar">
+					<div id="subsContainer"></div>
+					<div class="clear"></div>
+				</div>
+			</div>
+			<button class="mdc-fab app-fab--absolute rst-playFab mdc-fab--exited" aria-label="Favorite">
+				<span class="mdc-fab__icon material-icons">play_arrow</span>
+			</button>
+			<button class="mdc-fab app-fab--absolute rst-pauseFab mdc-fab--exited" aria-label="Favorite">
+				<span class="mdc-fab__icon material-icons">pause</span>
+			</button>
+			<div id="toolbar" style="display: none;">
+				<ul>
+					<li class="float-left">
+						<a href="#" class="toggleDrawer">
+							<i class="material-icons mdc-list-item__graphic" aria-hidden="true">menu</i>
+						</a>
+					</li>
+					<li class="float-left" title="Toggle realtime translation">
+						<a href="#" class="toggleRealtime">♺</a>
+					</li>
+					<li class="float-left" title="Toggle translation only">
+						<a href="#" class="hideOriginals">▣</a>
+					</li>
+					<li class="float-right" title="Toggle video playback">
+						<a href="#" class="toggleplayback">&#10074;&#10074;&#9658;</a>
+					</li>
+					<li class="float-right" title="Toggle single view">
+						<a href="#" class="toggleSingleView">▩</a>
+					</li>
+				</ul>
 			</div>
 		</div>
-		<button class="mdc-fab app-fab--absolute rst-playFab mdc-fab--exited" aria-label="Favorite">
-			<span class="mdc-fab__icon material-icons">play_arrow</span>
-		</button>
-		<button class="mdc-fab app-fab--absolute rst-pauseFab mdc-fab--exited" aria-label="Favorite">
-			<span class="mdc-fab__icon material-icons">pause</span>
-		</button>
-		<div id="toolbar" style="display: none;">
-			<ul>
-				<li class="float-left">
-					<a href="#" class="toggleDrawer">
-						<i class="material-icons mdc-list-item__graphic" aria-hidden="true">menu</i>
-					</a>
-				</li>
-				<li class="float-left" title="Toggle realtime translation">
-					<a href="#" class="toggleRealtime">♺</a>
-				</li>
-				<li class="float-left" title="Toggle translation only">
-					<a href="#" class="hideOriginals">▣</a>
-				</li>
-				<li class="float-right" title="Toggle video playback">
-					<a href="#" class="toggleplayback">&#10074;&#10074;&#9658;</a>
-				</li>
-				<li class="float-right" title="Toggle single view">
-					<a href="#" class="toggleSingleView">▩</a>
-				</li>
-			</ul>
-		</div>
-	</div>
 
-	<div id="favorite-subtitles" class="panel" style="display: none;">
-		<div class="hidescrollbar-wrapper subs-wrapper">
-			<div class="subs hidescrollbar" id="favorite-subs-container">
+		<div id="favorite-subtitles" class="panel" style="display: none;">
+			<div class="hidescrollbar-wrapper subs-wrapper">
+				<div class="subs hidescrollbar" id="favorite-subs-container">
 
+				</div>
 			</div>
 		</div>
-	</div>
 
-	<div class="panel padding" id="settings" style="display: none">
-		<h1>settings</h1>
-		<h2>User</h2>
-		<div id="userSettings">
-			<p class="logged-in username">Currently logged in user:
-				<span></span>
-			</p>
-			<button class="logged-in" id="settingsLogoutButton">Logout</button>
+		<div class="panel padding" id="settings" style="display: none">
+			<h1>settings</h1>
+			<h2>User</h2>
+			<div id="userSettings">
+				<p class="logged-in username">Currently logged in user:
+					<span></span>
+				</p>
+				<button class="logged-in" id="settingsLogoutButton">Logout</button>
+			</div>
 		</div>
-	</div>
 
-	<div class="panel" id="authentication" style="display: none;">
-		<div id="firebaseui-auth-container"></div>
+		<div class="panel" id="authentication" style="display: none;">
+			<div id="firebaseui-auth-container"></div>
+		</div>
+
 	</div>
 
 	<div class="mdc-snackbar" aria-live="assertive" aria-atomic="true" aria-hidden="true">
