@@ -1,6 +1,6 @@
 import { ISubtitlesPanelView } from "./SubtitlesPanelView";
 import { ITranslateService, ISession, ISubtitle, getCurrentUserAsync } from "../../lib";
-import { IDisposable, IListener, IController, IMessage } from "../../lib/interfaces";
+import { IController, IMessage } from "../../lib/interfaces";
 
 import * as firebase from "firebase";
 import "firebase/firestore";
@@ -8,8 +8,7 @@ import "firebase/auth";
 import { PanelController } from "../../lib/base/panel";
 import { IPanelDependencies } from "../panels";
 import { getLoggedInUserAsync } from "../../lib/authenticator";
-import { stringify } from "querystring";
-import { getLastValueInMap, Omit } from "../../lib/utils";
+import { getLastValueInMap} from "../../lib/utils";
 import { AnyMessage } from "../../messages";
 import { IAppBarAction } from "../../appbar/AppBarView";
 import { IActionsMessage } from "../../appbar/AppBarController";

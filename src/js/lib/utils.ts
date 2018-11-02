@@ -1,5 +1,3 @@
-export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
-
 export const getLastItemInMap = map => Array.from(map)[map.size - 1];
 export const getLastKeyInMap = map => Array.from(map)[map.size - 1][0];
 export const getLastValueInMap = <T, K = any>(map: Map<K, T>, n = 1) => {
@@ -25,4 +23,10 @@ export const requireEls = <T extends Element = HTMLElement>(selector: string, co
     if (!els.length) throw Error("Elements are required: " + selector);
 
     return els;
+}
+
+export const waitAsync = <T>(delayInMs: number, resolveWith: T) => {
+    return new Promise<T>(resolve => {
+        window.setTimeout(() => resolve(resolveWith), delayInMs);
+    });
 }

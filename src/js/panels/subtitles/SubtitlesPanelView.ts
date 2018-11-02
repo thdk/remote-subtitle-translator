@@ -1,5 +1,5 @@
 import { ISubtitlesPanelController } from "./SubtitlesPanelController";
-import { IPanelDependencies, PanelWithActions } from "../panels";
+import { IPanelDependencies, Panel } from "../panels";
 import { ISubtitle, ISession } from "../../lib";
 import { IPannelView } from "../../lib/base/panel";
 
@@ -23,7 +23,7 @@ export interface ISubtitlesPanelViewDependencies extends IPanelDependencies {
     readonly snackbar: Snackbar;
 }
 
-export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPanelView {
+export class SubtitlesPanelView extends Panel implements ISubtitlesPanelView {
     private readonly controller: ISubtitlesPanelController;
 
     private readonly $container: JQuery;

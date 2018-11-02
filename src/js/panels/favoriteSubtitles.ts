@@ -21,7 +21,7 @@ export class FavoriteSubtitlesPanel extends Panel {
     private readonly $container: JQuery;
 
     constructor(container: HTMLElement, deps: IFavovoriteSubtitlesPanelDependencies) {
-        super('favorite-subtitles', container, deps);
+        super("favorites", container, deps);
 
         this.$container = $(container.querySelector("#favorite-subs-container") as HTMLElement);
 

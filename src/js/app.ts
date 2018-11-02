@@ -14,16 +14,16 @@ import 'firebase/database';
 import { SubtitlesPanelView, ISubtitlesPanelView } from './panels/subtitles/SubtitlesPanelView';
 import { SubtitlesPanelController } from './panels/subtitles/SubtitlesPanelController';
 import { DrawerNavigationView, INavigationView } from './navigation/DrawerNavigationView';
-import { NavigationController, INavigationControllerDependencies } from './navigation/NavigationController';
+import { NavigationController, INavigationControllerDependencies, INavigationController } from './navigation/NavigationController';
 import { AppBarView } from './appbar/AppBarView';
 import { AppBarController } from './appbar/AppBarController';
 import { PubSubBroadcaster } from './lib/broadcaster';
-import { isPanelWithActions } from './panels/panels';
 import { IBroadcaster, IDisposable, IListener } from './lib/interfaces';
 import { requireEl } from './lib/utils';
-import { Authenticator, IAuthenticator } from './lib/authenticator';
+import { Authenticator, IAuthenticator, getLoggedInUserAsync } from './lib/authenticator';
 import { AnyMessage } from './messages';
 import { Snackbar } from './components/snackbar';
+import { MainNavigation, IMainNavigationDependencies, INavigationPath } from './navigation/MainNavigation';
 
 export class RemoteSubtitleReceiver implements IDisposable, IListener {
     private readonly firestore: firebase.firestore.Firestore;
@@ -33,7 +33,7 @@ export class RemoteSubtitleReceiver implements IDisposable, IListener {
     private readonly subtitlesPanel: ISubtitlesPanelView;
     private readonly authenticationPanel: AuthenticationPanel;
 
-    private readonly navigation: INavigationView;
+    private readonly navigation: MainNavigation;
     private readonly appBar: AppBarView;
 
     private firebaseApp: firebase.app.App;
@@ -61,7 +61,7 @@ export class RemoteSubtitleReceiver implements IDisposable, IListener {
         this.authenticator = new Authenticator({ broadcaster: this.broadcaster, auth });
         this.snackbar = new Snackbar(requireEl(".mdc-snackbar"));
 
-        const { broadcaster, firestore, authenticator, snackbar } = this;
+        const { broadcaster, firestore, authenticator, snackbar, panelDashboard } = this;
 
         const isVideoMode = () => {
             if (URLSearchParams) {
@@ -91,12 +91,19 @@ export class RemoteSubtitleReceiver implements IDisposable, IListener {
         this.panelDashboard.setPanel(this.authenticationPanel);
 
         // drawer navigation
-        const navigationDeps: INavigationControllerDependencies = {
+        const navigationDeps: IMainNavigationDependencies = {
             broadcaster,
-            navigate: destination => this.panelDashboard.showPanel(destination)
+            panelDashboard
         };
 
-        this.navigation = new DrawerNavigationView(view => new NavigationController(view, navigationDeps));
+        const navigationPaths: INavigationPath[] = [this.subtitlesPanel, favoriteSubtitlesPanel, settingsPanel]
+            .map(p => {
+                return {
+                    name: p.name,
+                    isNavigationAllowedAsync: () => getLoggedInUserAsync().then(user => true, () => false)
+                };
+            });
+        this.navigation = new MainNavigation(navigationDeps, navigationPaths);
 
         // app bar
         this.appBar = new AppBarView(

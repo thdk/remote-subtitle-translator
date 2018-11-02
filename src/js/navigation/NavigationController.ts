@@ -1,7 +1,7 @@
 import { AnyMessage } from "../messages";
 import { IPannelController } from "../lib/base/panel";
 import { IBroadcaster, IController } from "../lib/interfaces";
-import { INavigationView } from "./DrawerNavigationView";
+import { INavigationView, INavigationItem } from "./DrawerNavigationView";
 
 export interface INavigationController extends IPannelController {
     itemClicked: (itemName: string) => void;
@@ -9,24 +9,26 @@ export interface INavigationController extends IPannelController {
 
 export interface INavigationControllerDependencies {
     broadcaster: IBroadcaster;
-    navigate: (destination: string) => void;
 }
 
 export class NavigationController implements IController {
     private readonly view: INavigationView;
-    private readonly navigate: INavigationControllerDependencies["navigate"];
     private readonly broadcaster: INavigationControllerDependencies["broadcaster"];
+    private readonly items?: INavigationItem[];
 
-    constructor(view: INavigationView, deps: INavigationControllerDependencies){
-        const {navigate, broadcaster} = deps;
-        this.navigate = navigate;
+    constructor(view: INavigationView, items: INavigationItem[] | undefined,  deps: INavigationControllerDependencies){
+        const {broadcaster} = deps;
         this.broadcaster = broadcaster;
-        this.subscribe();
+        this.items = items;
         this.view = view;
+        this.view.setItems(items);
+        this.subscribe();
     }
 
     public itemClicked(itemName: string) {
-        this.navigate(itemName);
+        if (!this.items) return;
+
+        this.items.filter(i => i.id === itemName)[0].action();
     }
 
     public onMessage(message: AnyMessage) {

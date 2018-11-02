@@ -12,7 +12,7 @@ export class Panel implements IPanel {
     private readonly closeEl?: HTMLElement;
 
     protected readonly bc: IBroadcaster;
-    public readonly name: string;
+    public name: string;
     private isOpen = false;
 
     constructor(name: string, container: HTMLElement, deps: IPanelDependencies) {
@@ -61,12 +61,4 @@ export class Panel implements IPanel {
     onCloseClicked = (event: MouseEvent): void => {
         this.close();
     }
-}
-
-export class PanelWithActions extends Panel {
-    public actions: IAppBarAction[] | undefined;
-}
-
-export const isPanelWithActions = (panel: IPanel): panel is PanelWithActions => {
-    return panel instanceof PanelWithActions;
 }
