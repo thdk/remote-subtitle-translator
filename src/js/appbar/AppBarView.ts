@@ -11,6 +11,7 @@ export interface IAppBarAction {
     iconActive?: string;
     action: () => void;
     sequence?: number;
+    isActive?: boolean;
 }
 
 export interface IAppBarView {
@@ -103,11 +104,14 @@ export class AppBarView implements IAppBarView {
             this.actionsEl.classList.add("hide");
         }
         else {
+            // For the short type action bar, only one action is allowed
+            if (this.options.type === "short" && actions.length > 1) actions.shift();
+
             this.actionsEl.classList.remove("hide");
             const actionsHtml = actions
                 .map(a => {
                     this.actions[a.icon] = a.action;
-                    return this.getActionTemplate(a);
+                    return this.getActionTemplate(a, a.isActive);
                 })
                 .reduce((p, c) => p + c, "");
             this.actionsEl.insertAdjacentHTML("afterbegin", actionsHtml);
@@ -116,6 +120,8 @@ export class AppBarView implements IAppBarView {
                 buttonEl.addEventListener("click", () => buttonEl.classList.toggle("mdc-icon-button--on"));
             })
         }
+
+        this.setCssClasses(actions);
     }
 
     public setTitle(title: string | undefined) {
@@ -123,12 +129,14 @@ export class AppBarView implements IAppBarView {
         this.titleEl.textContent = title ? title : null;
     }
 
-    private setCssClasses() {
+    private setCssClasses(actions?: IAppBarAction[]) {
         const {type, fixed} = this.options;
 
         // short
         this.topAppBarEl.classList.toggle("mdc-top-app-bar--short", type === "short");
         this.contentEl.classList.toggle("mdc-top-app-bar--short-fixed-adjust", type === "short");
+        this.topAppBarEl.classList.toggle("mdc-top-app-bar--short-has-action-item", type === "short" && actions && actions.length === 1);
+        this.topAppBarEl.classList.toggle("mdc-top-app-bar--short-collapsed", type === "short" && fixed);
 
         // dense
         this.topAppBarEl.classList.toggle("mdc-top-app-bar--dense", type === "dense");

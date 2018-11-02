@@ -99,18 +99,12 @@ export class RemoteSubtitleReceiver implements IDisposable, IListener {
         this.navigation = new DrawerNavigationView(view => new NavigationController(view, navigationDeps));
 
         // app bar
-        const getActions = () => {
-            const openPanel = this.panelDashboard.getOpenPanel();
-            if (!openPanel || !isPanelWithActions(openPanel)) return undefined;
-            else return openPanel.actions;
-        };
-
         this.appBar = new AppBarView(
             { toggleMenu: () => this.navigation.toggle() },
-            view => new AppBarController(view, { getActions, broadcaster }),
+            view => new AppBarController(view, { broadcaster }),
             {
                 type: isVideoMode() ? "short" : "dense",
-                fixed: false
+                fixed: isVideoMode() ? true : false
             }
         );
 

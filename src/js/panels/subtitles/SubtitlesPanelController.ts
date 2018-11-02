@@ -12,6 +12,7 @@ import { stringify } from "querystring";
 import { getLastValueInMap, Omit } from "../../lib/utils";
 import { AnyMessage } from "../../messages";
 import { IAppBarAction } from "../../appbar/AppBarView";
+import { IActionsMessage } from "../../appbar/AppBarController";
 
 export interface ISessionMessage extends IMessage {
     type: "session";
@@ -28,8 +29,7 @@ export interface ISubtitlesPanelController extends IController {
     toggleHideOriginals(): void;
     toggleSingleView(): void;
     shouldHideOriginals(): boolean;
-    requestSubtitles(session: ISession): void;
-    getActions(): IAppBarAction[];
+    loadSession(session: ISession): void;
 }
 
 type PlayerSettings = {
@@ -76,8 +76,13 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
 
         // reflect default settings in view with their side effects
         this.settingsSetHideOriginals(this.settings.hideOriginals);
-        this.settingsSetRealtimeTranslation(this.settings.realtimeTranslation);
+
         this.setPlaybackState(false);
+
+        if (this.isVideoMode()) {
+            this.toggleSingleView();
+            this.settingsSetHideOriginals(true);
+        }
 
         this.translateService = deps.translateService;
         this.dbSubtitlesRef = deps.firestore.collection("subtitles");
@@ -88,21 +93,27 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
     /**
      * TODO: broadcast message with actions when panel opens
      */
-    public getActions() {
+    private getActions(): IAppBarAction[] {
         if (this.isVideoMode())
-            return [];
+            return [{
+                icon: "fullscreen",
+                text: "Fullscreen",
+                action: () => this.toggleSingleView()
+            }];
         else return [
             {
                 iconActive: "cloud",
                 icon: "cloud_off",
                 text: "Realtime",
-                action: () => this.toggleRealtimeTranslation()
+                action: () => this.toggleRealtimeTranslation(),
+                isActive: this.settings.realtimeTranslation
             },
             {
                 iconActive: "unfold_less",
                 icon: "unfold_more",
                 text: "English only",
-                action: () => this.toggleHideOriginals()
+                action: () => this.toggleHideOriginals(),
+                isActive: this.settings.hideOriginals
             },
             {
                 icon: "fullscreen",
@@ -122,12 +133,12 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
             });
     }
 
-    public toggleRealtimeTranslation() {
+    public toggleRealtimeTranslation(force?: boolean) {
         if (!this.session) return;
 
         this.firestoreUpdateAsync<ISession>(this.dbSessionsRef,
             {
-                isRealtimeTranslated: !this.session.isRealtimeTranslated,
+                isRealtimeTranslated: force !== undefined ? force : !this.session.isRealtimeTranslated,
                 id: this.session.id
             });
     }
@@ -165,7 +176,7 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
         });
     }
 
-    public requestSubtitles(session: ISession) {
+    public loadSession(session: ISession) {
         if (this.session && this.session.id !== session.id) {
             this.subs.clear();
         }
@@ -174,6 +185,9 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
 
         // set the view session state
         this.setPlaybackState(session.isWatching);
+        this.settingsSetRealtimeTranslation(session.isRealtimeTranslated);
+
+        this.broadcaster.postMessage<IActionsMessage>("actions", {actions: this.getActions()});
 
         // unsubscribe from previous firestore queries
         if (this.subtitlesUnsubscribe) this.subtitlesUnsubscribe();
@@ -220,13 +234,14 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
             case "session": {
                 if (message.payload.event === "new") {
                     if (!this.session || this.session.id !== message.payload.session.id) {
-                        this.view.sessionAvailable(this.session, message.payload.session);
+                        // TODO: once possible to pick session from list, use the commented line instead
+                        // this.view.sessionAvailable(this.session, message.payload.session);
+                        this.view.sessionAvailable(undefined, message.payload.session);
                     }
                 }
                 else if (message.payload.event === "modified") {
                     const { isRealtimeTranslated, isWatching } = message.payload.session;
                     this.settingsSetRealtimeTranslation(isRealtimeTranslated);
-
                     if (this.canSetPlaybackState()) this.view.setPlaybackState(isWatching);
                 }
             }
@@ -318,10 +333,10 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
     private settingsSetRealtimeTranslation(realtime: boolean) {
         this.settings.realtimeTranslation = realtime;
         this.view.setActiveRealTimeButton(realtime);
-        this.view.toolbarToggleHideOriginalsButton(realtime);
+        // this.view.toolbarToggleHideOriginalsButton(realtime);
 
         if (!this.settings.realtimeTranslation) {
-            this.settingsSetHideOriginals(false);
+           // this.settingsSetHideOriginals(false);
         }
     }
 

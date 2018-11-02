@@ -9,8 +9,8 @@
 @import "@material/icon-button/mdc-icon-button";
 
 body {
+    @include mdc-theme-prop('color', 'text-primary-on-dark');
     font: 100% $font-stack;
-    color: $primary-color;
     background: $background-color;
     font-size: $font-size;
     padding: 0;
@@ -72,7 +72,7 @@ body {
       position: relative;
       text-align: left;
       padding: 2%;
-      padding-left: 3em;
+      padding-left: 3%;
       float: left;
       width: 95%;
 
@@ -84,7 +84,7 @@ body {
         float: left;
         width: 86%;
         &.translation {
-          color: $secondary-color;
+          @include mdc-theme-prop('color', 'text-secondary-on-dark');
         }
       }
 
@@ -100,15 +100,14 @@ body {
         display: none;
 
         &:last-child, &.multi {
-          background:#1c1c1c;
+          background: black;
           display: block;
           position: fixed;
-          height: 90vh;
+          height: 100vh;
           display: flex;
           align-items: center;
           text-align: center;
           flex-direction: column;
-          top: 50px;
           font-size: 1.2em;
           font-weight: bold;
 
@@ -118,10 +117,10 @@ body {
         }
 
         &.multi {
-          height: 45vh;
+          height: 50vh;
 
           &:last-child {
-            top: 45vh;
+            top: 50vh;
           }
         }
       }

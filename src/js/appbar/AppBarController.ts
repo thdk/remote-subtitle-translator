@@ -1,22 +1,26 @@
 import { IAppBarView, IAppBarAction } from "./AppBarView";
 import { AnyMessage } from "../messages";
-import { IController, IControllerDependencies } from "../lib/interfaces";
+import { IController, IControllerDependencies, IMessage } from "../lib/interfaces";
 
 export interface IAppBarController extends IController {
 }
 
 export interface IAppBarControllerDependencies extends IControllerDependencies {
-    getActions: () => IAppBarAction[] | undefined;
+}
+
+export interface IActionsMessage extends IMessage {
+    type: "actions",
+    payload: {
+        actions: IAppBarAction[];
+    }
 }
 
 export class AppBarController implements IAppBarController {
     private readonly view: IAppBarView;
-    private readonly getActions: IAppBarControllerDependencies["getActions"];
     private readonly broadcaster: IAppBarControllerDependencies["broadcaster"];
 
     constructor(view: IAppBarView, deps: IAppBarControllerDependencies) {
         this.view = view;
-        this.getActions = deps.getActions;
         this.broadcaster = deps.broadcaster;
 
         this.subscribe();
@@ -24,8 +28,8 @@ export class AppBarController implements IAppBarController {
 
     public onMessage(message: AnyMessage) {
         // todo: move to open function of each panel!
-        if (message.type === "panel") {
-            this.view.setActions(this.getActions());
+        if (message.type === "actions") {
+            this.view.setActions(message.payload.actions);
         }
     }
 

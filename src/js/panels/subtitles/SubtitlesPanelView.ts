@@ -47,9 +47,6 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
         this.pauseFabEl = requireEl(".rst-pauseFab", this.containerEl);
 
         this.controller = controllerCreator(this);
-
-        // TODO: use message to inform app bar with possible actions
-        this.actions = this.controller.getActions();
     }
 
     protected init() {
@@ -112,13 +109,17 @@ export class SubtitlesPanelView extends PanelWithActions implements ISubtitlesPa
     }
 
     public sessionAvailable(oldSession: ISession | undefined, newSession: ISession) {
-        if (!oldSession) this.controller.requestSubtitles(newSession);
+        if (!oldSession) {
+            this.$container[0].innerHTML = "";
+            this.subs = {};
+            this.controller.loadSession(newSession);
+        }
         else {
             this.snackbar.show({
                 actionHandler: () => {
                     this.$container[0].innerHTML = "";
                     this.subs = {};
-                    this.controller.requestSubtitles(newSession);
+                    this.controller.loadSession(newSession);
                 },
                 message: "New session detected.",
                 actionText: "Load subs",
