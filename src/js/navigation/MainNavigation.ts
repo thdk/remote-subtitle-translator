@@ -2,12 +2,13 @@ import { DrawerNavigationView, INavigationItem } from "./DrawerNavigationView";
 import { INavigationControllerDependencies, NavigationController } from "./NavigationController";
 import { PanelDashboard, AnyPanel } from "../panels/dashboard";
 import { waitAsync } from "../lib/utils";
-import { IListener, IBroadcaster } from "../lib/interfaces";
+import { IListener, IBroadcaster, Library } from "../lib/interfaces";
 import { AnyMessage } from "../messages";
 
 export interface IMainNavigationDependencies extends INavigationControllerDependencies {
     panelDashboard: PanelDashboard;
     broadcaster: IBroadcaster;
+    library: Library;
 }
 
 export interface INavigationPath extends Pick<AnyPanel, "name"> {
@@ -18,19 +19,16 @@ export class MainNavigation implements IListener {
     private readonly navigationPaths: INavigationPath[];
     private view?: DrawerNavigationView;
     private items?: INavigationItem[];
-    private readonly library: { [index: string]: { icon: string, text: string } } = {};
+    private readonly library: Library;
     private readonly panelDashboard: PanelDashboard;
     private readonly broadcaster: IBroadcaster;
 
     // TODO: typing: navigationIds should be allowed only valid panel names!
     public constructor(deps: IMainNavigationDependencies, paths: INavigationPath[]) {
-        this.library["settings"] = { icon: "tune", text: "Settings" };
-        this.library["subtitles"] = { icon: "subtitles", text: "Remote subtitles" };
-        this.library["favorites"] = { icon: "favorite", text: "Favorites" };
-
         this.navigationPaths = paths;
         this.panelDashboard = deps.panelDashboard;
         this.broadcaster = deps.broadcaster;
+        this.library = deps.library;
 
         this.validateAndFilterItemsAsync().then(() => {
             this.view = new DrawerNavigationView(view => new NavigationController(view, this.items, deps));

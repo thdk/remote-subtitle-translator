@@ -4,6 +4,7 @@ import { Panel, IPanelDependencies } from "./panels";
 import { requireEl, requireEls } from "../lib/utils";
 
 import * as auth from "../lib/authenticator";
+import {MDCRipple} from '@material/ripple';
 
 export interface ISettingsPanelDependencies extends IPanelDependencies {
 }
@@ -20,6 +21,9 @@ export class SettingsPanel extends Panel {
         super.init();
         requireEl("#settingsLogoutButton")
             .addEventListener("click", () => auth.logout());
+
+
+        const buttonRipple = new MDCRipple(document.querySelector('.mdc-button'));
     }
 
     public openAsync() {

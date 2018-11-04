@@ -1,11 +1,12 @@
 import { IAppBarView, IAppBarAction } from "./AppBarView";
 import { AnyMessage } from "../messages";
-import { IController, IControllerDependencies, IMessage } from "../lib/interfaces";
+import { IController, IControllerDependencies, IMessage, Library } from "../lib/interfaces";
 
 export interface IAppBarController extends IController {
 }
 
 export interface IAppBarControllerDependencies extends IControllerDependencies {
+    library: Library;
 }
 
 export interface IActionsMessage extends IMessage {
@@ -18,10 +19,12 @@ export interface IActionsMessage extends IMessage {
 export class AppBarController implements IAppBarController {
     private readonly view: IAppBarView;
     private readonly broadcaster: IAppBarControllerDependencies["broadcaster"];
+    private readonly library: IAppBarControllerDependencies["library"];
 
     constructor(view: IAppBarView, deps: IAppBarControllerDependencies) {
         this.view = view;
         this.broadcaster = deps.broadcaster;
+        this.library = deps.library;
 
         this.subscribe();
     }
@@ -30,6 +33,12 @@ export class AppBarController implements IAppBarController {
         // todo: move to open function of each panel!
         if (message.type === "actions") {
             this.view.setActions(message.payload.actions);
+        }
+
+        if (message.type === "panel") {
+            if (message.payload.action === "show") {
+                this.view.setTitle(this.library[message.payload.panelName].text);
+            }
         }
     }
 

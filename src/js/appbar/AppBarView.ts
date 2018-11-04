@@ -16,6 +16,7 @@ export interface IAppBarAction {
 
 export interface IAppBarView {
     setActions(actions: IAppBarAction[] | undefined);
+    setTitle(title: string | undefined);
     show(): void;
     hide(): void;
 }
@@ -151,7 +152,7 @@ export class AppBarView implements IAppBarView {
 
     private getActionTemplate(action: IAppBarAction, active = false) {
         return `
-            <button data-action-id=${action.icon} class="rst-action mdc-icon-button${active ? " mdc-icon-button--on" : ""}" aria-label="${action.text}"
+            <button data-action-id=${action.icon} class="rst-action mdc-top-app-bar__action-item mdc-icon-button${active ? " mdc-icon-button--on" : ""}" aria-label="${action.text}"
                 aria-hidden="true" aria-pressed="false">
                 <i class="material-icons mdc-icon-button__icon mdc-icon-button__icon--on">${action.iconActive ? action.iconActive : action.icon}</i>
                 <i class="material-icons mdc-icon-button__icon">${action.icon}</i>

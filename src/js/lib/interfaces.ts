@@ -1,3 +1,5 @@
+export type Library = { [index: string]: { icon: string, text: string } };
+
 export interface IDisposable {
     dispose:() => void;
 }

@@ -12,13 +12,10 @@ import * as firebase from "firebase";
 import 'firebase/auth';
 import 'firebase/database';
 import { SubtitlesPanelView, ISubtitlesPanelView } from './panels/subtitles/SubtitlesPanelView';
-import { SubtitlesPanelController } from './panels/subtitles/SubtitlesPanelController';
-import { DrawerNavigationView, INavigationView } from './navigation/DrawerNavigationView';
-import { NavigationController, INavigationControllerDependencies, INavigationController } from './navigation/NavigationController';
-import { AppBarView } from './appbar/AppBarView';
+import { SubtitlesPanelController } from './panels/subtitles/SubtitlesPanelController';import { AppBarView } from './appbar/AppBarView';
 import { AppBarController } from './appbar/AppBarController';
 import { PubSubBroadcaster } from './lib/broadcaster';
-import { IBroadcaster, IDisposable, IListener } from './lib/interfaces';
+import { IBroadcaster, IDisposable, IListener, Library } from './lib/interfaces';
 import { requireEl } from './lib/utils';
 import { Authenticator, IAuthenticator, getLoggedInUserAsync } from './lib/authenticator';
 import { AnyMessage } from './messages';
@@ -41,6 +38,7 @@ export class RemoteSubtitleReceiver implements IDisposable, IListener {
     private broadcaster: IBroadcaster;
 
     private readonly snackbar: Snackbar;
+    private readonly library: Library = {};
 
     constructor(config: IAppConfig, translateService: ITranslateService) {
         // firebase
@@ -49,6 +47,10 @@ export class RemoteSubtitleReceiver implements IDisposable, IListener {
             authDomain: 'czech-subs-1520975638509.firebaseapp.com',
             projectId: 'czech-subs-1520975638509'
         });
+
+        this.library["settings"] = { icon: "tune", text: "Settings" };
+        this.library["favorites"] = { icon: "favorite", text: "Favorites" };
+        this.library["subtitles"] = { icon: "subtitles", text: "Remote subtitles" };
 
         this.firestore = firebase.firestore();
         const settings = { timestampsInSnapshots: true };
@@ -61,7 +63,7 @@ export class RemoteSubtitleReceiver implements IDisposable, IListener {
         this.authenticator = new Authenticator({ broadcaster: this.broadcaster, auth });
         this.snackbar = new Snackbar(requireEl(".mdc-snackbar"));
 
-        const { broadcaster, firestore, authenticator, snackbar, panelDashboard } = this;
+        const { broadcaster, firestore, authenticator, snackbar, panelDashboard, library } = this;
 
         const isVideoMode = () => {
             if (URLSearchParams) {
@@ -93,7 +95,8 @@ export class RemoteSubtitleReceiver implements IDisposable, IListener {
         // drawer navigation
         const navigationDeps: IMainNavigationDependencies = {
             broadcaster,
-            panelDashboard
+            panelDashboard,
+            library
         };
 
         const navigationPaths: INavigationPath[] = [this.subtitlesPanel, favoriteSubtitlesPanel, settingsPanel]
@@ -108,7 +111,7 @@ export class RemoteSubtitleReceiver implements IDisposable, IListener {
         // app bar
         this.appBar = new AppBarView(
             { toggleMenu: () => this.navigation.toggle() },
-            view => new AppBarController(view, { broadcaster }),
+            view => new AppBarController(view, { broadcaster, library }),
             {
                 type: isVideoMode() ? "short" : "dense",
                 fixed: isVideoMode() ? true : false

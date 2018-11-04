@@ -35,12 +35,14 @@
     "typescript": "^2.9.2"
   },
   "dependencies": {
+    "@material/button": "^0.41.0",
     "@material/drawer": "^0.40.1",
     "@material/fab": "^0.40.1",
     "@material/icon-button": "^0.40.1",
     "@material/snackbar": "^0.40.1",
     "@material/theme": "^0.41.0",
     "@material/top-app-bar": "^0.40.1",
+    "@material/typography": "^0.41.0",
     "@types/jquery": "^3.3.6",
     "@types/pubsub-js": "^1.5.18",
     "firebase": "^5.4.1",

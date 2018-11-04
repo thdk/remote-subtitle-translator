@@ -17,7 +17,7 @@
 	<link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.css" />
 </head>
 
-<body>
+<body class="mdc-typography mdc-typography--body1">
 	<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 	<script src="https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js"></script>
 	<script src="https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js"></script>
@@ -95,13 +95,14 @@
 		</div>
 
 		<div class="panel padding" id="settings" style="display: none">
-			<h1>settings</h1>
-			<h2>User</h2>
+			<div class="mdc-typography--subtitle4">User</div>
 			<div id="userSettings">
 				<p class="logged-in username">Currently logged in user:
 					<span></span>
 				</p>
-				<button class="logged-in" id="settingsLogoutButton">Logout</button>
+				<button class="logged-in mdc-button mdc-button--outlined" id="settingsLogoutButton">
+					Logout
+				</button>
 			</div>
 		</div>
 
