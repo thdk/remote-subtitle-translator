@@ -222,8 +222,11 @@ export class SubtitlesPanelView extends Panel implements ISubtitlesPanelView {
     private getSubtitleTemplate(sub: ISubtitle): string {
         return `
             <div class="sub ${sub.translation ? "has-translation" : "no-translation"}" data-subid="${sub.id}" data-subtime="${sub.time}">
+                <div class="text">
                 <p class="original${this.controller.shouldHideOriginals() ? " hide" : ""}">${sub.subtitle}</p>
                 ${sub.translation ? this.getSubtitleTranslationTemplate(sub) : ""}
+                </div>
+                ${sub.translation ? this.getSubtitleControlsTemplate(sub) : ""}
                 <div class="clear last"></div>
             </div>`;
     }
@@ -231,7 +234,6 @@ export class SubtitlesPanelView extends Panel implements ISubtitlesPanelView {
     private getSubtitleTranslationTemplate(sub: ISubtitle): string {
         return `
                 <p class="translation">${sub.translation}</p>
-                ${this.getSubtitleControlsTemplate(sub)}
             `;
     }
 

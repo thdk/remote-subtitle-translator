@@ -40,20 +40,20 @@ export class FavoriteSubtitlesPanel extends Panel {
 
         authentication.getLoggedInUserAsync().then(user => {
             this.unsubscribe = this.dbFavoritesRef.where("uid", "==", user.uid).orderBy("created")
-            .onSnapshot(snapshot => {
-                snapshot.docChanges().forEach(change => {
-                    const subtitle = Object.assign(change.doc.data(), { id: change.doc.id }) as ISubtitle;
-                    if (change.type === "added") {
-                        this.addSubtitleToDom(subtitle);
-                    }
-                    if (change.type === "modified") {
-                        this.updateSubtitleInDom(subtitle);
-                    }
-                    if (change.type === "removed") {
-                        this.deteleSubtitleInDom(subtitle);
-                    }
+                .onSnapshot(snapshot => {
+                    snapshot.docChanges().forEach(change => {
+                        const subtitle = Object.assign(change.doc.data(), { id: change.doc.id }) as ISubtitle;
+                        if (change.type === "added") {
+                            this.addSubtitleToDom(subtitle);
+                        }
+                        if (change.type === "modified") {
+                            this.updateSubtitleInDom(subtitle);
+                        }
+                        if (change.type === "removed") {
+                            this.deteleSubtitleInDom(subtitle);
+                        }
+                    });
                 });
-            });
         });
 
 
@@ -87,17 +87,20 @@ export class FavoriteSubtitlesPanel extends Panel {
     private getSubitleTemplate(sub: ISubtitle): JQuery {
         const $template = $(`
             <div class="sub" data-subid="${sub.id}">
-                <p class="original">${sub.subtitle}</p>
-            </div>`);
+                <div class="text">
+                    <p class="original">${sub.subtitle}</p>
+                    ${sub.translation ? `<p class="translation">${sub.translation}</p>` : ""}
+                </div>
+            </div>
+        `);
 
         if (sub.translation) {
-            // TODO: reduce into single append!
-            $template.append(`<p class="translation">${sub.translation}</p>`);
             $template.append(`
                 <div class="sub-controls">
-                    <a href="#" class="delete-favorite"><span >✘</span></a>
+                    <button class="mdc-icon-button material-icons delete-favorite">clear</button>
                     <!-- <a href="#" class="edit-favorite"><span>✎</span></a> -->
                 </div>`);
+
             $template.append(`<div class="clear"></div>`);
         }
 

@@ -76,9 +76,16 @@ body {
       padding-left: 3%;
       float: left;
       width: 95%;
+      display: flex;
 
       &:hover {
         cursor: pointer;
+      }
+
+      .text {
+        display: flex;
+        flex-direction: column;
+        width: 96%;
       }
 
       p {
@@ -90,10 +97,9 @@ body {
       }
 
       .sub-controls {
-        position: absolute;
-        right: 10px;
-        top: 10px;
-        width: 12%;
+        display: flex;
+        align-items: center;
+        width: 4%;
         font-size: 2em;
       }
 
