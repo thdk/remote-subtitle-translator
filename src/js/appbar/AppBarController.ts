@@ -39,6 +39,7 @@ export class AppBarController implements IAppBarController {
             if (message.payload.action === "show") {
                 const libItem = this.library[message.payload.panelName];
                 this.view.setTitle(libItem ? libItem.text : undefined);
+                this.view.setActions(undefined);
             }
         }
     }

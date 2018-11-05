@@ -8,7 +8,7 @@ import "firebase/auth";
 import { PanelController } from "../../lib/base/panel";
 import { IPanelDependencies } from "../panels";
 import { getLoggedInUserAsync } from "../../lib/authenticator";
-import { getLastValueInMap} from "../../lib/utils";
+import { getLastValueInMap } from "../../lib/utils";
 import { AnyMessage } from "../../messages";
 import { IAppBarAction } from "../../appbar/AppBarView";
 import { IActionsMessage } from "../../appbar/AppBarController";
@@ -186,8 +186,6 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
         this.setPlaybackState(session.isWatching);
         this.settingsSetRealtimeTranslation(session.isRealtimeTranslated);
 
-        this.broadcaster.postMessage<IActionsMessage>("actions", {actions: this.getActions()});
-
         // unsubscribe from previous firestore queries
         if (this.subtitlesUnsubscribe) this.subtitlesUnsubscribe();
 
@@ -228,7 +226,6 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
     }
 
     public onMessage(message: AnyMessage) {
-        console.log(message);
         switch (message.type) {
             case "session": {
                 if (message.payload.event === "new") {
@@ -237,6 +234,8 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
                         // this.view.sessionAvailable(this.session, message.payload.session);
                         this.view.sessionAvailable(undefined, message.payload.session);
                     }
+
+                    this.broadcaster.postMessage<IActionsMessage>("actions", { actions: this.getActions() });
                 }
                 else if (message.payload.event === "modified") {
                     const { isRealtimeTranslated, isWatching } = message.payload.session;
@@ -335,7 +334,7 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
         // this.view.toolbarToggleHideOriginalsButton(realtime);
 
         if (!this.settings.realtimeTranslation) {
-           // this.settingsSetHideOriginals(false);
+            // this.settingsSetHideOriginals(false);
         }
     }
 
