@@ -12,6 +12,8 @@ import { getLastValueInMap } from "../../lib/utils";
 import { AnyMessage } from "../../messages";
 import { IAppBarAction } from "../../appbar/AppBarView";
 import { IActionsMessage } from "../../appbar/AppBarController";
+import * as firestoreUtils from "../../lib/firestoreUtils";
+import { toggleSubtitleInFavoritesAsync } from "../../dal";
 
 export interface ISessionMessage extends IMessage {
     type: "session";
@@ -125,7 +127,7 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
     public togglePlayback() {
         if (!this.session) return;
 
-        this.firestoreUpdateAsync<ISession>(this.dbSessionsRef,
+        firestoreUtils.updateAsync<ISession>(this.dbSessionsRef,
             {
                 isWatching: !this.session.isWatching,
                 id: this.session.id
@@ -135,21 +137,11 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
     public toggleRealtimeTranslation(force?: boolean) {
         if (!this.session) return;
 
-        this.firestoreUpdateAsync<ISession>(this.dbSessionsRef,
+        firestoreUtils.updateAsync<ISession>(this.dbSessionsRef,
             {
                 isRealtimeTranslated: force !== undefined ? force : !this.session.isRealtimeTranslated,
                 id: this.session.id
             });
-    }
-
-    private firestoreUpdateAsync<T extends firebase.firestore.UpdateData>(collectionRef: firebase.firestore.CollectionReference, data: Partial<T> & Pick<T, "id">) {
-        return collectionRef
-            .doc(data.id)
-            .update(data);
-    }
-
-    private firestoreTypeData<T extends firebase.firestore.DocumentData>(data: { id: string, data: () => firebase.firestore.DocumentData }): T {
-        return Object.assign<Pick<T, "id">, Exclude<T, "id">>({ id: data.id }, data.data() as Exclude<T, "id">);
     }
 
     private watchSessionsAsync() {
@@ -160,7 +152,7 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
                 .limit(1)
                 .onSnapshot(snapshot => {
                     snapshot.docChanges().forEach(change => {
-                        const session = this.firestoreTypeData<ISession>(change.doc);
+                        const session = firestoreUtils.typeSnapshot<ISession>(change.doc);
                         if (change.type === "added") {
                             this.broadcaster.postMessage<ISessionMessage>("session", { event: "new", session });
                         }
@@ -280,40 +272,7 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
             throw new Error("Can't add favorite subtitle: dbSubtitlesRef is undefined.")
         }
 
-        const sourceSubtitleRef = this.dbSubtitlesRef.doc(subId);
-        sourceSubtitleRef.get().then(subDoc => {
-            const { id: sourceSubtitleId, subtitle, translation, favoriteId } = Object.assign(subDoc.data(), { id: subDoc.id }) as ISubtitle;
-
-            if (favoriteId) {
-                // Remove from favorites
-                const favoriteSubRef = this.dbFavoritesRef!.doc(favoriteId);
-                return Promise.all([
-                    favoriteSubRef.delete(),
-                    sourceSubtitleRef.update({ favoriteId: null })
-                ]);
-            }
-            else {
-                // Add to favorites
-                // get logged in user first
-                return getCurrentUserAsync().then(user => {
-                    const fav = {
-                        sourceSubtitleId,
-                        subtitle,
-                        translation,
-                        created: firebase.firestore.FieldValue.serverTimestamp(),
-                        uid: user.uid
-                    };
-                    const favoriteSubRef = this.dbFavoritesRef!.doc();
-
-                    return Promise.all([
-                        favoriteSubRef.set(fav),
-                        sourceSubtitleRef.update({ favoriteId: favoriteSubRef.id })
-                    ]);
-                }, error => {
-                    alert(error);
-                });
-            }
-        });
+        toggleSubtitleInFavoritesAsync(subId, this.dbSubtitlesRef, this.dbFavoritesRef);
     }
 
     public toggleHideOriginals() {

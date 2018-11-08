@@ -39,6 +39,7 @@
     }
 
     export interface IFavoriteSubtitle {
+            id: string;
             sourceSubtitleId: string;
             subtitle: string;
             translation: string;

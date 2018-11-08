@@ -4,15 +4,14 @@ import { AuthenticationPanel } from './panels/authenticationPanel';
 import { ITranslateService, HttpNetwork, GoogleTranslate } from './lib';
 import { SettingsPanel } from './panels/settings';
 import { PanelDashboard } from './panels/dashboard';
-import { FavoriteSubtitlesPanel } from './panels/favoriteSubtitles';
 
 // This import loads the firebase namespace along with all its type information.
 import * as firebase from "firebase";
 // These imports load individual services into the firebase namespace.
 import 'firebase/auth';
-import 'firebase/database';
+import 'firebase/firestore';
 import { SubtitlesPanelView, ISubtitlesPanelView } from './panels/subtitles/SubtitlesPanelView';
-import { SubtitlesPanelController } from './panels/subtitles/SubtitlesPanelController';import { AppBarView } from './appbar/AppBarView';
+import { SubtitlesPanelController } from './panels/subtitles/SubtitlesPanelController'; import { AppBarView } from './appbar/AppBarView';
 import { AppBarController } from './appbar/AppBarController';
 import { PubSubBroadcaster } from './lib/broadcaster';
 import { IBroadcaster, IDisposable, IListener, Library } from './lib/interfaces';
@@ -21,6 +20,8 @@ import { Authenticator, IAuthenticator, getLoggedInUserAsync } from './lib/authe
 import { AnyMessage } from './messages';
 import { Snackbar } from './components/snackbar';
 import { MainNavigation, IMainNavigationDependencies, INavigationPath } from './navigation/MainNavigation';
+import { FavoritesPanelView } from './panels/favorites/FavoritesPanelView';
+import { FavoritesPanelController } from './panels/favorites/FavoritesPanelController';
 
 export class RemoteSubtitleReceiver implements IDisposable, IListener {
     private readonly firestore: firebase.firestore.Firestore;
@@ -83,7 +84,11 @@ export class RemoteSubtitleReceiver implements IDisposable, IListener {
         this.subtitlesPanel = new SubtitlesPanelView(requireEl("#subtitle-player"), subtitlesControllerCreator, { broadcaster, snackbar });
         this.panelDashboard.setPanel(this.subtitlesPanel);
 
-        const favoriteSubtitlesPanel = new FavoriteSubtitlesPanel(requireEl("#favorite-subtitles"), { broadcaster, firestore });
+        const favoriteSubtitlesPanel = new FavoritesPanelView(
+            requireEl("#favorite-subtitles"),
+            (view) => new FavoritesPanelController(view, { broadcaster, firestore }),
+            { snackbar, broadcaster }
+        );
         this.panelDashboard.setPanel(favoriteSubtitlesPanel);
 
         const settingsPanel = new SettingsPanel(requireEl("#settings"), { broadcaster });
