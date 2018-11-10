@@ -2,9 +2,9 @@ import { IPanel } from "../lib/base/panel";
 import { SettingsPanel } from "./settings";
 import { AuthenticationPanel } from "./authenticationPanel";
 import { SubtitlesPanelView } from "./subtitles/SubtitlesPanelView";
-import { FavoriteSubtitlesPanel } from "./favoriteSubtitles";
+import { FavoritesPanelView } from "./favorites/FavoritesPanelView";
 
-export type AnyPanel = SettingsPanel | AuthenticationPanel | SubtitlesPanelView | FavoriteSubtitlesPanel;
+export type AnyPanel = SettingsPanel | AuthenticationPanel | SubtitlesPanelView | FavoritesPanelView;
 export type panelKeys = keyof AnyPanel;
 
 export type PanelIds = Pick<AnyPanel, keyof (Pick<AnyPanel, "name">)>;
