@@ -55,6 +55,9 @@ export class FavoritesPanelView extends Panel implements IFavoritesPanelView {
     }
 
     public close() {
+        // TODO: Do not remove favorites from DOM on close
+        // Open panel should only fetch newer changes in favorites collection
+        this.subsPlaceholderEl.innerHTML = "";
         this.controller.unsubscribe();
         super.close();
     }

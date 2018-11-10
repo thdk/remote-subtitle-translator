@@ -5,9 +5,6 @@ import { SubtitlesPanelView } from "./subtitles/SubtitlesPanelView";
 import { FavoritesPanelView } from "./favorites/FavoritesPanelView";
 
 export type AnyPanel = SettingsPanel | AuthenticationPanel | SubtitlesPanelView | FavoritesPanelView;
-export type panelKeys = keyof AnyPanel;
-
-export type PanelIds = Pick<AnyPanel, keyof (Pick<AnyPanel, "name">)>;
 
 export class PanelDashboard {
     private readonly panels: Map<string, IPanel>;
