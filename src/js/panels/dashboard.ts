@@ -4,7 +4,11 @@ import { AuthenticationPanel } from "./authenticationPanel";
 import { SubtitlesPanelView } from "./subtitles/SubtitlesPanelView";
 import { FavoritesPanelView } from "./favorites/FavoritesPanelView";
 
-export type AnyPanel = SettingsPanel | AuthenticationPanel | SubtitlesPanelView | FavoritesPanelView;
+export type AnyPanel =
+    SettingsPanel |
+    AuthenticationPanel |
+    SubtitlesPanelView |
+    FavoritesPanelView;
 
 export class PanelDashboard {
     private readonly panels: Map<string, IPanel>;

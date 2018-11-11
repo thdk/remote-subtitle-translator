@@ -37,7 +37,10 @@ export const toggleSubtitleInFavoritesAsync = (subId: string, subtitleCollection
             const favoriteSubRef = favoritesCollectionRef.doc(favoriteId);
             return Promise.all([
                 favoriteSubRef.delete(),
-                sourceSubtitleRef.update({ favoriteId: firebase.firestore.FieldValue.delete() })
+                sourceSubtitleRef.update({
+                    favoriteId: firebase.firestore.FieldValue.delete(),
+                    modified: firebase.firestore.FieldValue.serverTimestamp()
+                })
             ]).then(() => false);
         }
         else {
@@ -55,7 +58,10 @@ export const toggleSubtitleInFavoritesAsync = (subId: string, subtitleCollection
 
                 return Promise.all([
                     favoriteSubRef.set(fav),
-                    sourceSubtitleRef.update({ favoriteId: favoriteSubRef.id })
+                    sourceSubtitleRef.update({
+                        favoriteId: favoriteSubRef.id,
+                        modified: firebase.firestore.FieldValue.serverTimestamp()
+                    })
                 ]).then(() => true);
             });
         }

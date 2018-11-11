@@ -26,6 +26,7 @@
         translation?: string;
         favoriteId?: string;
         created: firebase.firestore.Timestamp;
+        modified: firebase.firestore.Timestamp;
         time?: number;
         isMulti: boolean;
     }

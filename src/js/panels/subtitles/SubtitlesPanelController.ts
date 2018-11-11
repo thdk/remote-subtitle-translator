@@ -184,34 +184,34 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
         const lastSubtitleReceived = getLastValueInMap(this.subs);
         this.subtitlesUnsubscribe = this.dbSubtitlesRef
             .where("sessionId", "==", session.id)
-            .orderBy("created", "asc")
-            .startAfter(lastSubtitleReceived ? lastSubtitleReceived.created : 0)
+            .orderBy("modified", "asc")
+            .startAfter(lastSubtitleReceived ? lastSubtitleReceived.modified : 0)
             .onSnapshot(snapshot => {
                 snapshot.docChanges().forEach(change => {
                     const subtitle = Object.assign(change.doc.data(), { id: change.doc.id }) as ISubtitle;
-                    if (change.type === "added") {
+                    if (change.type === "removed") throw 'not implemented';
+
+                    // note: change.type "added" can also be fired when document is updated:
+                    // This can happen when the field from the order by query parameter document is updated.
+                    // So better to check if we already have it in our Map (update) or not (new);
+                    if (!this.subs.has(subtitle.id)) {
                         this.subs.set(subtitle.id, subtitle);
                         this.view.addSubtitleToDom(subtitle);
 
                         if (!subtitle.translation && this.settings.realtimeTranslation) {
                             this.translate(subtitle.id, subtitle.subtitle);
                         }
-                    }
-                    if (change.type === "modified") {
+                    } else {
                         const oldSub = this.subs.get(subtitle.id);
                         if (oldSub) {
-                            const newSub = { ...oldSub, ...subtitle };
-                            this.subs.set(subtitle.id, newSub);
-                            this.view.updateSubtitleInDom(oldSub, newSub);
+                            this.subs.set(subtitle.id, subtitle);
+                            this.view.updateSubtitleInDom(oldSub, subtitle);
                             if (oldSub.translation || (!subtitle.translation && this.settings.realtimeTranslation)) {
                                 this.translate(subtitle.id, subtitle.subtitle);
                             }
                         } else {
                             // TODO: subtitle did not exist on the client yet => add it
                         }
-                    }
-                    if (change.type === "removed") {
-                        throw 'not implemented';
                     }
                 });
             });
@@ -221,10 +221,14 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
         switch (message.type) {
             case "session": {
                 if (message.payload.event === "new") {
-                    if (!this.session || this.session.id !== message.payload.session.id) {
+                    const { session: newSession } = message.payload
+                    if (!this.session || this.session.id !== newSession.id) {
                         // TODO: once possible to pick session from list, use the commented line instead
-                        // this.view.sessionAvailable(this.session, message.payload.session);
-                        this.view.sessionAvailable(undefined, message.payload.session);
+                        // this.view.sessionAvailable(this.session, newSession);
+                        this.view.sessionAvailable(undefined, newSession);
+                    } else if (this.session) {
+                        // continue with the same session
+                        this.loadSession(newSession);
                     }
 
                     this.broadcaster.postMessage<IActionsMessage>("actions", { actions: this.getActions() });

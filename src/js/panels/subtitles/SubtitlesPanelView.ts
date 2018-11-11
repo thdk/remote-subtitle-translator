@@ -68,7 +68,7 @@ export class SubtitlesPanelView extends Panel implements ISubtitlesPanelView {
             }
         });
 
-        this.$container.on("click.rst, tap.rst", ".fav, .unfav", e => {
+        this.$container.on("click.rst", ".fav, .unfav", e => {
             e.preventDefault();
             e.stopPropagation();
             const $target = $(e.currentTarget);
@@ -90,7 +90,7 @@ export class SubtitlesPanelView extends Panel implements ISubtitlesPanelView {
     }
 
     public deinit() {
-        this.$container.off(".rst");
+        this.$container.off("click.rst");
         super.deinit();
     }
 
