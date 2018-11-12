@@ -12,6 +12,7 @@ export interface INavigationView {
     hide();
     toggle();
     setItems(items: INavigationItem[] | undefined);
+    setActiveItem(id: string);
 }
 
 export interface INavigationItem {

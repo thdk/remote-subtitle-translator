@@ -191,17 +191,20 @@ export class SubtitlesPanelController extends PanelController implements ISubtit
                     const subtitle = Object.assign(change.doc.data(), { id: change.doc.id }) as ISubtitle;
                     if (change.type === "removed") throw 'not implemented';
 
-                    // note: change.type "added" can also be fired when document is updated:
-                    // This can happen when the field from the order by query parameter document is updated.
-                    // So better to check if we already have it in our Map (update) or not (new);
-                    if (!this.subs.has(subtitle.id)) {
-                        this.subs.set(subtitle.id, subtitle);
-                        this.view.addSubtitleToDom(subtitle);
+                    if (change.type === "added") {
+                        // note: change.type "added" can also be fired when document is updated:
+                        // This can happen when the field from the order by query parameter document is updated.
+                        // It will be followed with a modified change, so we can ignore it
+                        if (!this.subs.has(subtitle.id)) {
+                            this.subs.set(subtitle.id, subtitle);
+                            this.view.addSubtitleToDom(subtitle);
 
-                        if (!subtitle.translation && this.settings.realtimeTranslation) {
-                            this.translate(subtitle.id, subtitle.subtitle);
+                            if (!subtitle.translation && this.settings.realtimeTranslation) {
+                                this.translate(subtitle.id, subtitle.subtitle);
+                            }
                         }
-                    } else {
+                    }
+                    else if (change.type === "modified") {
                         const oldSub = this.subs.get(subtitle.id);
                         if (oldSub) {
                             this.subs.set(subtitle.id, subtitle);

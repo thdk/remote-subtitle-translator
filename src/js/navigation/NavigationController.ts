@@ -33,6 +33,7 @@ export class NavigationController implements IController {
 
     public onMessage(message: AnyMessage) {
         if (message.type === "panel" && message.payload.action === "show") {
+            this.view.setActiveItem(message.payload.panelName);
             this.view.hide();
         }
     }
